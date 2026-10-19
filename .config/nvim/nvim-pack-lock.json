@@ -26,9 +26,17 @@
       "rev": "84a4987ff36798c2fc1169cbaff67960aed9776f",
       "src": "https://github.com/NMAC427/guess-indent.nvim"
     },
+    "indent-blankline.nvim": {
+      "rev": "f1e186e44d3b7f9ae918008e2c28ce37c6023d2d",
+      "src": "https://github.com/lukas-reineke/indent-blankline.nvim"
+    },
     "mason-lspconfig.nvim": {
       "rev": "00b5473cca4db5b410ff4bae724e3b6e21f2687f",
       "src": "https://github.com/mason-org/mason-lspconfig.nvim"
+    },
+    "mason-nvim-dap.nvim": {
+      "rev": "9a10e096703966335bd5c46c8c875d5b0690dade",
+      "src": "https://github.com/jay-babu/mason-nvim-dap.nvim"
     },
     "mason-tool-installer.nvim": {
       "rev": "443f1ef8b5e6bf47045cb2217b6f748a223cf7dc",
@@ -42,9 +50,42 @@
       "rev": "295af26358628c8ba8f007ff6a7e0aec2f642a31",
       "src": "https://github.com/nvim-mini/mini.nvim"
     },
+    "neo-tree.nvim": {
+      "rev": "f3f3bf73414e400cf9fc13fda50f00404a8f8ab1",
+      "src": "https://github.com/nvim-neo-tree/neo-tree.nvim",
+      "version": ">=0.0.0"
+    },
+    "nui.nvim": {
+      "rev": "10fc361835c856ba4233ef5ea135b919bf3dce97",
+      "src": "https://github.com/MunifTanjim/nui.nvim"
+    },
+    "nvim-autopairs": {
+      "rev": "3172f40c16563db871a58f20d205c710ad782311",
+      "src": "https://github.com/windwp/nvim-autopairs"
+    },
+    "nvim-dap": {
+      "rev": "cfa2d58f4537aca6ca83e2de1a0d9f1491121264",
+      "src": "https://github.com/mfussenegger/nvim-dap"
+    },
+    "nvim-dap-go": {
+      "rev": "b4421153ead5d726603b02743ea40cf26a51ed5f",
+      "src": "https://github.com/leoluz/nvim-dap-go"
+    },
+    "nvim-dap-ui": {
+      "rev": "cc9dd33aade7f20bae414d0cba163bc60d4d4b43",
+      "src": "https://github.com/rcarriga/nvim-dap-ui"
+    },
+    "nvim-lint": {
+      "rev": "f6230a5c06ba59e6059c14637f1dbe29a7978b9b",
+      "src": "https://github.com/mfussenegger/nvim-lint"
+    },
     "nvim-lspconfig": {
       "rev": "45a3a444b710511c39abca3b60bb6e23a21e3de5",
       "src": "https://github.com/neovim/nvim-lspconfig"
+    },
+    "nvim-nio": {
+      "rev": "edcc181a875301dd21840189aa2f2f9ad69fc172",
+      "src": "https://github.com/nvim-neotest/nvim-nio"
     },
     "nvim-treesitter": {
       "rev": "d4a9b23a383266bdb0bfb42d565f31e83f27be5e",
