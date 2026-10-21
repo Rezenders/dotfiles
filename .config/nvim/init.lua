@@ -315,22 +315,7 @@ do
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
   }
-
-  -- [[ Colorscheme ]]
-  -- You can easily change to a different colorscheme.
-  -- Change the name of the colorscheme plugin below, and then
-  -- change the command under that to load whatever the name of that colorscheme is.
-  --
-  -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-  vim.pack.add { gh 'folke/tokyonight.nvim' }
-  ---@diagnostic disable-next-line: missing-fields
-  require('tokyonight').setup {
-    styles = {
-      comments = { italic = false }, -- Disable italics in comments
-    },
-  }
-  
-  -- Detect the desktop environment's color scheme.
+  -- Detect desktop color scheme (GNOME / KDE Plasma).
   local function system_is_dark()
     local result = vim.system({
       'gdbus', 'call', '--session',
@@ -338,16 +323,28 @@ do
       '--object-path', '/org/freedesktop/portal/desktop',
       '--method', 'org.freedesktop.portal.Settings.Read',
       'org.freedesktop.appearance', 'color-scheme',
-    }):wait()
+    }, { text = true }):wait()
 
     if result.code ~= 0 then
-      return true -- Default to dark if detection fails.
+      return false
     end
 
-    local scheme = result.stdout:match('uint32%s+(%d+)')
-    return scheme ~= '2'
+    local scheme = tonumber(result.stdout:match('uint32%s+(%d+)'))
+    return scheme == 1
   end
-
+  -- [[ Colorscheme ]]
+  -- You can easily change to a different colorscheme.
+  -- Change the name of the colorscheme plugin below, and then
+  -- change the command under that to load whatever the name of that colorscheme is.
+  --
+  -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+  -- vim.pack.add { gh 'folke/tokyonight.nvim' }
+  -- ---@diagnostic disable-next-line: missing-fields
+  -- require('tokyonight').setup {
+  --   styles = {
+  --     comments = { italic = false }, -- Disable italics in comments
+  --   },
+  -- }
   -- Load the colorscheme here.
   -- Like many other themes, this one has different styles, and you could load
   -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
@@ -382,11 +379,22 @@ do
   vim.g.gruvbox_contrast_light = 'medium'
   vim.g.gruvbox_italic = 0
 
-
-  vim.o.background = system_is_dark() and 'dark' or 'light'
+  vim.pack.add { gh 'ClearAspect/onehalf' }
+  require('onehalf').setup {
+    transparency = false,
+  }
+  -- vim.o.background = system_is_dark() and 'dark' or 'light'
   -- vim.cmd.colorscheme 'tokyonight'
   -- vim.cmd.colorscheme 'kanso'
-  vim.cmd.colorscheme 'gruvbox'
+  -- vim.cmd.colorscheme 'gruvbox'
+  -- Apply colorscheme based on desktop appearance.
+  if system_is_dark() then
+    vim.o.background = 'dark'
+    vim.cmd.colorscheme 'gruvbox'
+  else
+    vim.o.background = 'light'
+    vim.cmd.colorscheme 'onehalflight'
+  end
 
 
   -- Highlight todo, notes, etc in comments
