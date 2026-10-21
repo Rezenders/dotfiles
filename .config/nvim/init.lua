@@ -150,6 +150,14 @@ do
   -- Toggle comments with Ctrl + /
   vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment' })
   vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment' })
+
+  vim.keymap.set('n', '<leader>tt', function()
+  vim.fn.jobstart({
+    'kitten', '@', 'launch',
+    '--type=window',
+    '--cwd=' .. vim.fn.getcwd(),
+  })
+  end, { desc = 'Open Kitty terminal pane' })
 end
 
 -- ============================================================
@@ -955,3 +963,63 @@ do
   -- require 'custom.plugins.ui'
   -- require 'custom.plugins.git'
 end
+
+-- kitty integration
+do
+  -- [[ Image support ]]
+  vim.pack.add {
+    { src = 'https://github.com/3rd/image.nvim' },
+  }
+
+  require('image').setup {
+    backend = 'kitty',
+    processor = 'magick_cli',
+
+    integrations = {
+      markdown = {
+        enabled = true,
+        clear_in_insert_mode = false,
+        download_remote_images = false,
+        only_render_image_at_cursor = false,
+        filetypes = { 'markdown' },
+      },
+    },
+
+    max_width = 100,
+    max_height = 30,
+    max_width_window_percentage = 100,
+    max_height_window_percentage = 50,
+  }
+  -- [[ Smart Splits ]]
+  vim.pack.add {
+    { src = 'https://github.com/smart-splits-nvim/smart-splits.nvim' },
+    { src = 'https://github.com/smart-splits-nvim/backend-kitty' },
+  }
+
+  require('smart-splits').setup {
+    mux = {
+      backend = 'smart-splits-backend-kitty',
+    },
+    move = {
+      at_edge = 'stop',
+    },
+    resize = {
+      amount = 3,
+    },
+  }
+
+  local splits = require('smart-splits')
+
+  -- Navigation
+  vim.keymap.set('n', '<C-h>', splits.move_cursor_left)
+  vim.keymap.set('n', '<C-j>', splits.move_cursor_down)
+  vim.keymap.set('n', '<C-k>', splits.move_cursor_up)
+  vim.keymap.set('n', '<C-l>', splits.move_cursor_right)
+
+  -- Resizing
+  vim.keymap.set('n', '<M-h>', splits.resize_left)
+  vim.keymap.set('n', '<M-j>', splits.resize_down)
+  vim.keymap.set('n', '<M-k>', splits.resize_up)
+  vim.keymap.set('n', '<M-l>', splits.resize_right)
+end
+
