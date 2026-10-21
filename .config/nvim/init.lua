@@ -30,8 +30,7 @@ do
 
 	-- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
 	vim.o.ignorecase = true
-	vim.o.smartcase = true 
-  
+	vim.o.smartcase = true
 	-- Keep signcolumn on by default
 	vim.o.signcolumn = 'yes'
 
@@ -148,6 +147,9 @@ do
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function() vim.highlight.on_yank() end,
   })
+  -- Toggle comments with Ctrl + /
+  vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment' })
+  vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment' })
 end
 
 -- ============================================================
@@ -331,7 +333,40 @@ do
   -- Load the colorscheme here.
   -- Like many other themes, this one has different styles, and you could load
   -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-  vim.cmd.colorscheme 'tokyonight-day'
+  -- vim.cmd.colorscheme 'tokyonight-day'
+  
+  -- [[ Colorscheme ]]
+  vim.pack.add { gh 'folke/tokyonight.nvim' }
+
+  require('tokyonight').setup {
+    style = 'moon',
+    light_style = 'day',
+    styles = {
+      comments = { italic = false },
+    },
+  }
+
+  -- Detect the desktop environment's color scheme.
+  local function system_is_dark()
+    local result = vim.system({
+      'gdbus', 'call', '--session',
+      '--dest', 'org.freedesktop.portal.Desktop',
+      '--object-path', '/org/freedesktop/portal/desktop',
+      '--method', 'org.freedesktop.portal.Settings.Read',
+      'org.freedesktop.appearance', 'color-scheme',
+    }):wait()
+
+    if result.code ~= 0 then
+      return true -- Default to dark if detection fails.
+    end
+
+    local scheme = result.stdout:match('uint32%s+(%d+)')
+    return scheme ~= '2'
+  end
+
+  vim.o.background = system_is_dark() and 'dark' or 'light'
+  vim.cmd.colorscheme 'tokyonight'
+
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
