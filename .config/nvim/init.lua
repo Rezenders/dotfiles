@@ -329,23 +329,7 @@ do
       comments = { italic = false }, -- Disable italics in comments
     },
   }
-
-  -- Load the colorscheme here.
-  -- Like many other themes, this one has different styles, and you could load
-  -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-  -- vim.cmd.colorscheme 'tokyonight-day'
   
-  -- [[ Colorscheme ]]
-  vim.pack.add { gh 'folke/tokyonight.nvim' }
-
-  require('tokyonight').setup {
-    style = 'moon',
-    light_style = 'day',
-    styles = {
-      comments = { italic = false },
-    },
-  }
-
   -- Detect the desktop environment's color scheme.
   local function system_is_dark()
     local result = vim.system({
@@ -364,8 +348,45 @@ do
     return scheme ~= '2'
   end
 
+  -- Load the colorscheme here.
+  -- Like many other themes, this one has different styles, and you could load
+  -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+  -- vim.cmd.colorscheme 'tokyonight-day'
+  -- [[ Colorscheme ]]
+  -- vim.pack.add { gh 'folke/tokyonight.nvim' }
+  --
+  -- require('tokyonight').setup {
+  --   style = 'moon',
+  --   light_style = 'day',
+  --   styles = {
+  --     comments = { italic = false },
+  --   },
+  -- }
+  --
+  -- vim.pack.add { gh 'webhooked/kanso.nvim' }
+  --
+  -- require('kanso').setup {
+  --   background = {
+  --     dark = 'ink',
+  --     light = 'pearl',
+  --   },
+  --   transparent = false,
+  --   foreground = 'default',
+  --   commentStyle = { italic = false },
+  -- }
+  -- [[ Colorscheme ]]
+  vim.pack.add { gh 'morhetz/gruvbox' }
+
+  -- Gruvbox configuration
+  vim.g.gruvbox_contrast_dark = 'medium'
+  vim.g.gruvbox_contrast_light = 'medium'
+  vim.g.gruvbox_italic = 0
+
+
   vim.o.background = system_is_dark() and 'dark' or 'light'
-  vim.cmd.colorscheme 'tokyonight'
+  -- vim.cmd.colorscheme 'tokyonight'
+  -- vim.cmd.colorscheme 'kanso'
+  vim.cmd.colorscheme 'gruvbox'
 
 
   -- Highlight todo, notes, etc in comments
