@@ -966,30 +966,37 @@ end
 
 -- kitty integration
 do
+  -- [[ Scrollback browsing ]]
+  vim.pack.add { gh 'mikesmithgh/kitty-scrollback.nvim' }
+  require('kitty-scrollback').setup {}
+
   -- [[ Image support ]]
   vim.pack.add {
     { src = 'https://github.com/3rd/image.nvim' },
   }
 
-  require('image').setup {
-    backend = 'kitty',
-    processor = 'magick_cli',
+  -- Avoid image rendering conflicts in kitty-scrollback's Neovim instance.
+  if vim.env.KITTY_SCROLLBACK_NVIM ~= 'true' then
+    require('image').setup {
+      backend = 'kitty',
+      processor = 'magick_cli',
 
-    integrations = {
-      markdown = {
-        enabled = true,
-        clear_in_insert_mode = false,
-        download_remote_images = false,
-        only_render_image_at_cursor = false,
-        filetypes = { 'markdown' },
+      integrations = {
+        markdown = {
+          enabled = true,
+          clear_in_insert_mode = false,
+          download_remote_images = false,
+          only_render_image_at_cursor = false,
+          filetypes = { 'markdown' },
+        },
       },
-    },
 
-    max_width = 100,
-    max_height = 30,
-    max_width_window_percentage = 100,
-    max_height_window_percentage = 50,
-  }
+      max_width = 100,
+      max_height = 30,
+      max_width_window_percentage = 100,
+      max_height_window_percentage = 50,
+    }
+  end
   -- [[ Smart Splits ]]
   vim.pack.add {
     { src = 'https://github.com/smart-splits-nvim/smart-splits.nvim' },
@@ -1021,5 +1028,23 @@ do
   vim.keymap.set('n', '<M-j>', splits.resize_down)
   vim.keymap.set('n', '<M-k>', splits.resize_up)
   vim.keymap.set('n', '<M-l>', splits.resize_right)
+end
+
+-- Latex integration
+do
+  -- To use the most recent version from git, you can do simply:
+  vim.pack.add { "https://github.com/lervag/vimtex" }
+
+  vim.g.vimtex_view_method = "zathura_simple"
+  vim.api.nvim_create_autocmd("FileType", {
+        pattern = "tex",
+        callback = function()
+            vim.opt_local.spell = true
+            vim.opt_local.spelllang = "en_us"
+
+            vim.opt_local.wrap = true
+            vim.opt_local.linebreak = true
+        end,
+    })
 end
 
