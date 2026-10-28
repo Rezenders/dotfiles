@@ -151,13 +151,6 @@ do
   vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment' })
   vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment' })
 
-  vim.keymap.set('n', '<leader>tt', function()
-  vim.fn.jobstart({
-    'kitten', '@', 'launch',
-    '--type=window',
-    '--cwd=' .. vim.fn.getcwd(),
-  })
-  end, { desc = 'Open Kitty terminal pane' })
 end
 
 -- ============================================================
@@ -692,7 +685,7 @@ do
       --
       -- This may be unwanted, since they displace some of your code
       if client and client:supports_method('textDocument/inlayHint', event.buf) then
-        map('<leader>th', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle Inlay [H]ints')
+        map('<leader>ti', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle Inlay [H]ints')
       end
     end,
   })
@@ -1028,6 +1021,24 @@ do
   vim.keymap.set('n', '<M-j>', splits.resize_down)
   vim.keymap.set('n', '<M-k>', splits.resize_up)
   vim.keymap.set('n', '<M-l>', splits.resize_right)
+ 
+  local function kitty_split(direction)
+    vim.fn.jobstart({
+      'kitten', '@', 'launch',
+      '--type=window',
+      '--location=' .. direction,
+      '--cwd=' .. vim.fn.getcwd(),
+    })
+  end
+  -- Side by side
+  vim.keymap.set('n', '<leader>tv', function()
+    kitty_split('vsplit')
+  end, { desc = 'Kitty vertical split' })
+
+  -- Top and bottom
+  vim.keymap.set('n', '<leader>th', function()
+    kitty_split('hsplit')
+  end, { desc = 'Kitty horizontal split' })
 end
 
 -- Latex integration
@@ -1048,3 +1059,19 @@ do
     })
 end
 
+
+-- Pi integration
+do
+  vim.pack.add { "https://github.com/carderne/pi-nvim" }
+  -- require("pi-nvim").setup()
+  require("pi-nvim").setup({
+    socket_path = nil, -- auto-discover
+    set_default_keymaps = true,
+  })
+
+  -- vim.keymap.set("n", "<leader>pp", ":PiSend<CR>")
+  -- vim.keymap.set("n", "<leader>pf", ":PiSendFile<CR>")
+  -- vim.keymap.set("v", "<leader>ps", ":PiSendSelection<CR>")
+  -- vim.keymap.set("n", "<leader>pb", ":PiSendBuffer<CR>")
+  -- vim.keymap.set("n", "<leader>pi", ":PiPing<CR>")
+end

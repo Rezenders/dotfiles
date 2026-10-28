@@ -116,6 +116,10 @@
       "rev": "cb25877a6aada5ef98681950b85bd9f9f7f29a59",
       "src": "https://github.com/ClearAspect/onehalf"
     },
+    "pi-nvim": {
+      "rev": "b10a3cc94583cc232645f0e49533e282a3486c0d",
+      "src": "https://github.com/carderne/pi-nvim"
+    },
     "plenary.nvim": {
       "rev": "74b06c6c75e4eeb3108ec01852001636d85a932b",
       "src": "https://github.com/nvim-lua/plenary.nvim"
