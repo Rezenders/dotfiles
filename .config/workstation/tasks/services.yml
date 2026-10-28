@@ -1,0 +1,17 @@
+---
+- name: Enable and start Syncthing for the invoking user
+  become: true
+  ansible.builtin.systemd_service:
+    name: "syncthing@{{ workstation_user }}.service"
+    enabled: true
+    state: started
+  when:
+    - enable_syncthing | bool
+    - not ansible_check_mode
+
+- name: Explain service check-mode limitation
+  ansible.builtin.debug:
+    msg: "Syncthing service changes are skipped in check mode (the unit may not exist yet)."
+  when:
+    - enable_syncthing | bool
+    - ansible_check_mode

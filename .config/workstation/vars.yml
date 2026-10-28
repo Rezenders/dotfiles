@@ -1,0 +1,51 @@
+---
+# Personal Ubuntu 26.04 machines. Override with -e or an extra vars file.
+install_latex: true
+install_personal_apps: true
+enable_syncthing: true
+# "latest" upgrades only the packages managed here; it is not a full OS upgrade.
+package_state: latest
+# Match this machine's existing upstream Syncthing v2 channel.
+syncthing_channel: stable-v2
+# Opt in to rerunning the vendor installers to request an update.
+update_vendor_apps: false
+
+common_packages:
+  - git
+  - curl
+  - ca-certificates
+  - gnupg
+  - unzip
+  - golang-go
+  - neovim
+  - zathura
+  - zathura-cb
+  - zathura-ps
+  - zathura-djvu
+
+desktop_packages:
+  - gnome-shell-extension-manager
+  - gnome-browser-connector
+  - gnome-clocks
+  - gnome-tweaks
+  - input-remapper
+  - thunderbird
+
+latex_packages:
+  - texlive-full
+  - latexmk
+  - texlive-latex-base
+  - texlive-latex-recommended
+  - texlive-latex-extra
+
+vendor_installers:
+  - name: Zed
+    url: https://zed.dev/install.sh
+    script: zed-install.sh
+    interpreter: /bin/sh
+    executable: "{{ workstation_home }}/.local/bin/zed"
+  - name: Claude CLI
+    url: https://claude.ai/install.sh
+    script: claude-install.sh
+    interpreter: /bin/bash
+    executable: "{{ workstation_home }}/.local/bin/claude"

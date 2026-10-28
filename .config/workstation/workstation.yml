@@ -1,0 +1,47 @@
+---
+- name: Configure my personal Ubuntu workstation
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  become: false
+
+  vars_files:
+    - vars.yml
+
+  pre_tasks:
+    - name: Require a normal user on Ubuntu 26.04
+      ansible.builtin.assert:
+        that:
+          - ansible_facts["distribution"] == "Ubuntu"
+          - ansible_facts["distribution_version"] == "26.04"
+          - ansible_facts["user_id"] != "root"
+          - ansible_facts["architecture"] == "x86_64"
+          - package_state in ["present", "latest"]
+          - syncthing_channel in ["stable", "stable-v1", "stable-v2"]
+        fail_msg: >-
+          Run as your normal user on Ubuntu 26.04 amd64 (Spotify's apt package requires amd64).
+          Use --ask-become-pass, not sudo ansible-playbook.
+      tags: always
+
+    - name: Record the invoking user's identity
+      ansible.builtin.set_fact:
+        workstation_user: "{{ ansible_facts['user_id'] }}"
+        workstation_home: "{{ ansible_facts['user_dir'] }}"
+      tags: always
+
+  tasks:
+    - name: Configure upstream repositories
+      ansible.builtin.import_tasks: tasks/repositories.yml
+      tags: repositories
+
+    - name: Install and update managed packages
+      ansible.builtin.import_tasks: tasks/packages.yml
+      tags: packages
+
+    - name: Install user applications
+      ansible.builtin.import_tasks: tasks/applications.yml
+      tags: applications
+
+    - name: Configure services
+      ansible.builtin.import_tasks: tasks/services.yml
+      tags: services

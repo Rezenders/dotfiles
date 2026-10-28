@@ -1,0 +1,132 @@
+---
+- name: Install repository prerequisites
+  become: true
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - gnupg
+      - software-properties-common
+      - python3-apt
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+# add-apt-repository on Ubuntu 26.04 creates a deb822 .sources file.
+# Do not add a duplicate .list entry if that file already exists.
+- name: Check for the existing Neovim deb822 PPA
+  ansible.builtin.stat:
+    path: "/etc/apt/sources.list.d/neovim-ppa-ubuntu-unstable-{{ ansible_facts['distribution_release'] }}.sources"
+  register: neovim_deb822
+
+- name: Enable the unstable Neovim PPA
+  become: true
+  ansible.builtin.apt_repository:
+    repo: ppa:neovim-ppa/unstable
+    state: present
+    update_cache: false
+  when: not neovim_deb822.stat.exists
+
+- name: Create the apt keyring directory
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download upstream signing keys
+  become: true
+  ansible.builtin.get_url:
+    url: "{{ item.url }}"
+    dest: "{{ item.dest }}"
+    force: true
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - url: https://syncthing.net/release-key.gpg
+      dest: /etc/apt/keyrings/syncthing-archive-keyring.gpg
+      enabled: "{{ enable_syncthing }}"
+    - url: https://packages.mozilla.org/apt/repo-signing-key.gpg
+      dest: /etc/apt/keyrings/packages.mozilla.org.asc
+      enabled: true
+    - url: https://downloads.claude.ai/claude-desktop/key.asc
+      dest: /usr/share/keyrings/claude-desktop-archive-keyring.asc
+      enabled: "{{ install_personal_apps }}"
+    - url: https://download.spotify.com/debian/pubkey_5384CE82BA52C83A.asc
+      dest: /etc/apt/keyrings/spotify.asc
+      enabled: "{{ install_personal_apps }}"
+  when: item.enabled | bool
+  loop_control:
+    label: "{{ item.dest }}"
+
+- name: Configure upstream apt sources
+  become: true
+  ansible.builtin.copy:
+    dest: "/etc/apt/sources.list.d/{{ item.filename }}"
+    content: "{{ item.content }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - filename: syncthing.list
+      content: |
+        deb [signed-by=/etc/apt/keyrings/syncthing-archive-keyring.gpg] https://apt.syncthing.net/ syncthing {{ syncthing_channel }}
+      enabled: "{{ enable_syncthing }}"
+    - filename: mozilla.sources
+      content: |
+        Types: deb
+        URIs: https://packages.mozilla.org/apt
+        Suites: mozilla
+        Components: main
+        Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc
+      enabled: true
+    - filename: claude-desktop.list
+      content: |
+        deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/claude-desktop-archive-keyring.asc] https://downloads.claude.ai/claude-desktop/apt/stable stable main
+      enabled: "{{ install_personal_apps }}"
+    - filename: spotify.list
+      content: |
+        deb [signed-by=/etc/apt/keyrings/spotify.asc] https://repository.spotify.com stable non-free
+      enabled: "{{ install_personal_apps }}"
+  when: item.enabled | bool
+  loop_control:
+    label: "{{ item.filename }}"
+
+- name: Remove the old Mozilla list managed by setup_ubuntu.sh
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/mozilla.list
+    state: absent
+
+- name: Prefer upstream Firefox over Ubuntu's transitional package
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/mozilla
+    content: |
+      Package: firefox
+      Pin: release o=Ubuntu
+      Pin-Priority: -1
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Prefer packages from Mozilla's repository
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/mozilla-pin
+    content: |
+      Package: *
+      Pin: origin packages.mozilla.org
+      Pin-Priority: 1000
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Refresh apt metadata after configuring repositories
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+  # A fresh-machine check run cannot refresh repositories that don't exist yet.
+  when: not ansible_check_mode

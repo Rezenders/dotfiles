@@ -1,0 +1,46 @@
+---
+- name: Check for installed vendor applications
+  ansible.builtin.stat:
+    path: "{{ item.executable }}"
+  loop: "{{ vendor_installers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  register: vendor_app_status
+  when: install_personal_apps | bool
+
+- name: Create a user-owned installer cache
+  ansible.builtin.file:
+    path: "{{ workstation_home }}/.cache/workstation/installers"
+    state: directory
+    mode: "0700"
+  when: install_personal_apps | bool
+
+- name: Download missing or explicitly requested vendor installers
+  ansible.builtin.get_url:
+    url: "{{ item.item.url }}"
+    dest: "{{ workstation_home }}/.cache/workstation/installers/{{ item.item.script }}"
+    mode: "0600"
+    force: true
+  loop: "{{ vendor_app_status.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - install_personal_apps | bool
+    - not item.stat.exists or update_vendor_apps | bool
+
+- name: Run vendor installers as the normal user
+  ansible.builtin.command:
+    argv:
+      - "{{ item.item.interpreter }}"
+      - "{{ workstation_home }}/.cache/workstation/installers/{{ item.item.script }}"
+  environment:
+    HOME: "{{ workstation_home }}"
+    PATH: "{{ workstation_home }}/.local/bin:{{ ansible_env.PATH }}"
+  loop: "{{ vendor_app_status.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - install_personal_apps | bool
+    - not item.stat.exists or update_vendor_apps | bool
+    - not ansible_check_mode
+  changed_when: true

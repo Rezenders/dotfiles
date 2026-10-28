@@ -1,0 +1,61 @@
+---
+- name: Install or update common and desktop packages
+  become: true
+  ansible.builtin.apt:
+    name: "{{ common_packages + desktop_packages }}"
+    state: "{{ package_state }}"
+
+- name: Install or update LaTeX (large download)
+  become: true
+  ansible.builtin.apt:
+    name: "{{ latex_packages }}"
+    state: "{{ package_state }}"
+  when: install_latex | bool
+
+- name: Install or update upstream Syncthing
+  become: true
+  ansible.builtin.apt:
+    name: syncthing
+    state: "{{ package_state }}"
+  when: enable_syncthing | bool
+
+- name: Install or update personal apt applications
+  become: true
+  ansible.builtin.apt:
+    name:
+      - spotify-client
+      - claude-desktop
+    state: "{{ package_state }}"
+  when: install_personal_apps | bool
+
+# Install the replacement successfully BEFORE removing the Snap.
+- name: Install or update Firefox from Mozilla
+  become: true
+  ansible.builtin.apt:
+    name: firefox
+    state: "{{ package_state }}"
+    allow_downgrade: true
+
+- name: Check whether snap is available
+  ansible.builtin.stat:
+    path: /usr/bin/snap
+  register: snap_binary
+
+- name: Check whether Firefox Snap is installed
+  ansible.builtin.command:
+    argv: [/usr/bin/snap, list, firefox]
+  register: firefox_snap
+  changed_when: false
+  failed_when: firefox_snap.rc not in [0, 1]
+  check_mode: false
+  when: snap_binary.stat.exists
+
+- name: Remove Firefox Snap after installing the apt version
+  become: true
+  ansible.builtin.command:
+    argv: [/usr/bin/snap, remove, firefox]
+  when:
+    - snap_binary.stat.exists
+    - firefox_snap.rc | default(1) == 0
+    - not ansible_check_mode
+  changed_when: true
