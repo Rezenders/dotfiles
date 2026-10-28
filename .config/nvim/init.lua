@@ -697,6 +697,24 @@ do
   local servers = {
     clangd = {},
     pyright = {},
+    texlab = {
+        settings = {
+            texlab = {
+                build = {
+                    onSave = false,
+                },
+            },
+        },
+    },
+    -- Grammar and spelling checking
+    ltex_plus = {
+        filetypes = { "tex", "plaintex", "markdown" },
+        settings = {
+            ltex = {
+                language = "en-US",
+            },
+        },
+    },
     --
     -- Some languages (like rust) have entire language plugins that can be useful:
     --    https://github.com/mrcjkb/rustaceanvim
