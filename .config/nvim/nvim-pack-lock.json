@@ -19,9 +19,17 @@
       "src": "https://github.com/saghen/blink.compat",
       "version": "2.0.0 - 3.0.0"
     },
+    "claudecode.nvim": {
+      "rev": "c0deb41a0c6ac74c620be0a683aa9834e535c84a",
+      "src": "https://github.com/coder/claudecode.nvim"
+    },
     "cmp-vimtex": {
       "rev": "c09ca05bfa0641754516f13294d73d3799a02fc8",
       "src": "https://github.com/micangl/cmp-vimtex"
+    },
+    "diffview.nvim": {
+      "rev": "4516612fe98ff56ae0415a259ff6361a89419b0a",
+      "src": "https://github.com/sindrets/diffview.nvim"
     },
     "fidget.nvim": {
       "rev": "9e0201673e08e997e7cf52afca5565c70bd117f3",

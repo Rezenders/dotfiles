@@ -339,6 +339,25 @@ do
     end,
   }
 
+  -- Repository-wide diff review with a changed-files sidebar.
+  vim.pack.add {
+    gh 'nvim-lua/plenary.nvim',
+    gh 'sindrets/diffview.nvim',
+  }
+  require('diffview').setup {
+    hooks = {
+      diff_buf_win_enter = function()
+        -- Wrap long paragraphs in both sides of the diff (especially LaTeX).
+        vim.opt_local.wrap = true
+        vim.opt_local.linebreak = true
+      end,
+    },
+  }
+
+  vim.keymap.set('n', '<leader>gd', '<cmd>DiffviewOpen<CR>', { desc = 'Git: review changes' })
+  vim.keymap.set('n', '<leader>gq', '<cmd>DiffviewClose<CR>', { desc = 'Git: close diff review' })
+  vim.keymap.set('n', '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', { desc = 'Git: current file history' })
+
   -- Useful plugin to show you pending keybinds.
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {
@@ -349,6 +368,7 @@ do
     spec = {
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
+      { '<leader>g', group = '[G]it' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
@@ -434,6 +454,25 @@ do
     vim.cmd.colorscheme 'onehalflight'
   end
 
+
+  -- One Half clears Diffview's diff groups; restore their standard links.
+  local function restore_diffview_highlights()
+    for group, target in pairs {
+      DiffviewDiffAdd = 'DiffAdd',
+      DiffviewDiffDelete = 'DiffDelete',
+      DiffviewDiffChange = 'DiffChange',
+      DiffviewDiffText = 'DiffText',
+      DiffviewDiffAddAsDelete = 'DiffDelete',
+      DiffviewDiffDeleteDim = 'Comment',
+    } do
+      vim.api.nvim_set_hl(0, group, { link = target })
+    end
+  end
+  vim.api.nvim_create_autocmd('ColorScheme', {
+    group = vim.api.nvim_create_augroup('diffview-theme-highlights', { clear = true }),
+    callback = restore_diffview_highlights,
+  })
+  restore_diffview_highlights()
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
@@ -794,7 +833,10 @@ do
   }
 
   require('blink.compat').setup({})
-  require('cmp_vimtex').setup({})
+  require('cmp_vimtex').setup({
+    -- Use VimTeX's bibliography data instead of cmp-vimtex's faulty async parser.
+    bibtex_parser = { enabled = false },
+  })
 
   -- [[ Autocomplete Engine ]]
   vim.pack.add { { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' } }
@@ -1126,4 +1168,39 @@ do
   -- vim.keymap.set("v", "<leader>ps", ":PiSendSelection<CR>")
   -- vim.keymap.set("n", "<leader>pb", ":PiSendBuffer<CR>")
   -- vim.keymap.set("n", "<leader>pi", ":PiPing<CR>")
+end
+-- ============================================================
+-- Claude Code integration
+-- ============================================================
+do
+  vim.pack.add {
+    gh 'coder/claudecode.nvim',
+  }
+
+  require('claudecode').setup({
+    terminal = {
+      provider = 'none',
+      split_side = 'right',
+      split_width_percentage = 0.35,
+    },
+  })
+
+  -- Keybindings
+  vim.keymap.set('n', '<leader>ac', '<cmd>ClaudeCode<CR>',
+    { desc = 'Toggle Claude Code' })
+
+  vim.keymap.set('n', '<leader>af', '<cmd>ClaudeCodeFocus<CR>',
+    { desc = 'Focus Claude Code' })
+
+  vim.keymap.set('n', '<leader>ab', '<cmd>ClaudeCodeAdd %<CR>',
+    { desc = 'Add current buffer to Claude' })
+
+  vim.keymap.set('v', '<leader>as', '<cmd>ClaudeCodeSend<CR>',
+    { desc = 'Send selection to Claude' })
+
+  vim.keymap.set('n', '<leader>aa', '<cmd>ClaudeCodeDiffAccept<CR>',
+    { desc = 'Accept Claude diff' })
+
+  vim.keymap.set('n', '<leader>ad', '<cmd>ClaudeCodeDiffDeny<CR>',
+    { desc = 'Reject Claude diff' })
 end
