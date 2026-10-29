@@ -1,5 +1,7 @@
 ---
 # Personal Ubuntu 26.04 machines. Override with -e or an extra vars file.
+# Use traditional sudo: sudo-rs can break Ansible's password-prompt detection.
+ansible_become_exe: /usr/bin/sudo.ws
 install_latex: true
 install_personal_apps: true
 enable_syncthing: true
@@ -38,6 +40,7 @@ update_vendor_apps: false
 
 common_packages:
   - git
+  - gh
   - curl
   - ca-certificates
   - gnupg
@@ -64,6 +67,7 @@ desktop_packages:
 latex_packages:
   - texlive-full
   - latexmk
+  - latexdiff
   - texlive-latex-base
   - texlive-latex-recommended
   - texlive-latex-extra

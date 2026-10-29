@@ -1,4 +1,13 @@
 ---
+# Resolve the old deb822 entry before any apt operation: mismatched Signed-By
+# values prevent apt from reading its sources, even when only installing prerequisites.
+- name: Remove duplicate Spotify source in favor of the managed spotify.list
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/spotify.sources
+    state: absent
+  when: install_personal_apps | bool
+
 - name: Install repository prerequisites
   become: true
   ansible.builtin.apt:
@@ -48,6 +57,9 @@
     - url: https://download.docker.com/linux/ubuntu/gpg
       dest: /etc/apt/keyrings/docker.asc
       enabled: "{{ install_docker }}"
+    - url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+      dest: /etc/apt/keyrings/githubcli-archive-keyring.gpg
+      enabled: true
     - url: https://syncthing.net/release-key.gpg
       dest: /etc/apt/keyrings/syncthing-archive-keyring.gpg
       enabled: "{{ enable_syncthing }}"
@@ -82,6 +94,10 @@
         Architectures: amd64
         Signed-By: /etc/apt/keyrings/docker.asc
       enabled: "{{ install_docker }}"
+    - filename: github-cli.list
+      content: |
+        deb [arch=amd64 signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main
+      enabled: true
     - filename: syncthing.list
       content: |
         deb [signed-by=/etc/apt/keyrings/syncthing-archive-keyring.gpg] https://apt.syncthing.net/ syncthing {{ syncthing_channel }}
