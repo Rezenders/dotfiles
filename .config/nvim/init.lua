@@ -1104,7 +1104,7 @@ do
   -- Plugins
   vim.pack.add {
     gh 'lervag/vimtex',
-    gh '/luasnip-latex-snippets.nvim',
+    gh 'iurimateus/luasnip-latex-snippets.nvim',
   }
 
   vim.g.vimtex_view_method = "zathura_simple"

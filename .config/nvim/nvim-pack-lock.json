@@ -73,7 +73,7 @@
     },
     "luasnip-latex-snippets.nvim": {
       "rev": "84d37a68b5858bafe75573f8ea6898ba095fef45",
-      "src": "https://github.com//luasnip-latex-snippets.nvim"
+      "src": "https://github.com/iurimateus/luasnip-latex-snippets.nvim"
     },
     "mason-lspconfig.nvim": {
       "rev": "cd6c64d85c9871aaf759d26f2371029d6d674a48",
