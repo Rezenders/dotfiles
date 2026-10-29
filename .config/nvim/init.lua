@@ -700,9 +700,15 @@ do
     texlab = {
         settings = {
             texlab = {
-                build = {
-                    onSave = false,
-                },
+              build = {
+                  onSave = false,
+              },
+              -- Use latexindent for formatting
+              latexFormatter = "latexindent",
+
+              latexindent = {
+                  modifyLineBreaks = false,
+              },
             },
         },
     },
@@ -799,8 +805,6 @@ end
 do
   -- [[ Snippet Engine ]]
 
-  -- NOTE: You can also specify plugin using a version range for its git tag.
-  --  See `:help vim.version.range()` for more info
   vim.pack.add { { src = gh 'L3MON4D3/LuaSnip', version = vim.version.range '2.*' } }
   require('luasnip').setup {}
 
@@ -810,6 +814,18 @@ do
   --
   vim.pack.add { gh 'rafamadriz/friendly-snippets' }
   require('luasnip.loaders.from_vscode').lazy_load()
+
+  -- VimTeX completion source for blink.cmp
+  vim.pack.add {
+      gh 'micangl/cmp-vimtex',
+      {
+          src = gh 'saghen/blink.compat',
+          version = vim.version.range '2.*',
+      },
+  }
+
+  require('blink.compat').setup({})
+  require('cmp_vimtex').setup({})
 
   -- [[ Autocomplete Engine ]]
   vim.pack.add { { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' } }
@@ -856,6 +872,19 @@ do
 
     sources = {
       default = { 'lsp', 'path', 'snippets' },
+      -- Add VimTeX completion only for LaTeX files
+      per_filetype = {
+          tex = { 'vimtex', inherit_defaults = true },
+      },
+
+      -- Configure the VimTeX completion provider
+      providers = {
+        vimtex = {
+            name = 'vimtex',
+            module = 'blink.compat.source',
+            min_keyword_length = 0,
+        },
+      },
     },
 
     snippets = { preset = 'luasnip' },
@@ -1075,6 +1104,23 @@ do
             vim.opt_local.linebreak = true
         end,
     })
+  -- Format LaTeX using TexLab and latexindent
+  vim.api.nvim_create_autocmd("FileType", {
+      pattern = "tex",
+      callback = function(args)
+          vim.keymap.set("n", "<leader>lf", function()
+              vim.lsp.buf.format({
+                  async = true,
+                  filter = function(client)
+                      return client.name == "texlab"
+                  end,
+              })
+          end, {
+              buffer = args.buf,
+              desc = "Format LaTeX document",
+          })
+      end,
+  })
 end
 
 
