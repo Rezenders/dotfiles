@@ -3,6 +3,31 @@
 install_latex: true
 install_personal_apps: true
 enable_syncthing: true
+install_pi: true
+install_docker: true
+# Docker group membership is root-equivalent; opt in explicitly.
+docker_add_user_to_group: false
+# npm tools are installed only when missing, unless updates are requested.
+update_pi: false
+update_pi_extensions: false
+# Absolute paths keep Ansible independent of interactive shell/NVM setup.
+pi_node_executable: /usr/bin/node
+pi_npm_executable: /usr/bin/npm
+pi_npm_package: "@earendil-works/pi-coding-agent"
+ast_grep_npm_package: "@ast-grep/cli"
+pi_packages:
+  - git:github.com/code-yeongyu/pi-ast-grep
+  - npm:pi-web-access
+  - git:github.com/samfoy/pi-lsp-extension
+  - npm:pi-subagents
+  - npm:pi-nvim
+
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
 # "latest" upgrades only the packages managed here; it is not a full OS upgrade.
 package_state: latest
 # Match this machine's existing upstream Syncthing v2 channel.
@@ -18,12 +43,14 @@ common_packages:
   - unzip
   - golang-go
   - neovim
+  - ripgrep
   - zathura
   - zathura-cb
   - zathura-ps
   - zathura-djvu
 
 desktop_packages:
+  - kitty
   - gnome-shell-extension-manager
   - gnome-browser-connector
   - gnome-clocks

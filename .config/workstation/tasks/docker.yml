@@ -1,0 +1,50 @@
+---
+# Do not silently replace an existing distro container runtime.
+- name: Inspect installed packages for Docker conflicts
+  ansible.builtin.package_facts:
+    manager: apt
+
+- name: Require manual migration of conflicting container packages
+  ansible.builtin.assert:
+    that:
+      - docker_conflicts | intersect(ansible_facts.packages.keys() | list) | length == 0
+    fail_msg: >-
+      Docker CE conflicts with installed distribution container packages:
+      {{ docker_conflicts | intersect(ansible_facts.packages.keys() | list) | join(', ') }}.
+      Migrate these packages manually before enabling install_docker.
+      No existing runtime or container data has been removed.
+  vars:
+    docker_conflicts:
+      - docker.io
+      - docker-compose
+      - docker-compose-v2
+      - docker-doc
+      - docker-buildx
+      - podman-docker
+      - containerd
+      - runc
+
+- name: Install or update Docker Engine, Compose and Buildx
+  become: true
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: "{{ package_state }}"
+    fail_on_autoremove: true
+
+- name: Enable and start Docker Engine
+  become: true
+  ansible.builtin.systemd_service:
+    name: docker.service
+    enabled: true
+    state: started
+  when: not ansible_check_mode
+
+- name: Grant the invoking user root-equivalent Docker access
+  become: true
+  ansible.builtin.user:
+    name: "{{ workstation_user }}"
+    groups: docker
+    append: true
+  when:
+    - docker_add_user_to_group | bool
+    - not ansible_check_mode

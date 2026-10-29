@@ -1,0 +1,26 @@
+---
+- name: Install Cargo and native build tools for Tree-sitter CLI
+  become: true
+  ansible.builtin.apt:
+    name: [cargo, build-essential]
+    state: "{{ package_state }}"
+    update_cache: true
+    cache_valid_time: 3600
+  tags: packages
+
+- name: Install Tree-sitter CLI as the normal user
+  ansible.builtin.command:
+    argv: [cargo, install, --locked, tree-sitter-cli]
+    creates: "{{ workstation_home }}/.cargo/bin/tree-sitter"
+  environment:
+    HOME: "{{ workstation_home }}"
+    CARGO_HOME: "{{ workstation_home }}/.cargo"
+    PATH: "{{ workstation_home }}/.cargo/bin:/usr/bin:/bin:{{ ansible_env.PATH }}"
+  when: not ansible_check_mode
+
+- name: Include Cargo-installed tools in the login shell PATH
+  ansible.builtin.lineinfile:
+    path: "{{ workstation_home }}/.profile"
+    line: 'export PATH="$HOME/.cargo/bin:$PATH"'
+    create: true
+    mode: "0644"

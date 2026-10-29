@@ -1,0 +1,125 @@
+---
+- name: Install Node.js, npm and ripgrep for Pi
+  become: true
+  ansible.builtin.apt:
+    name: [nodejs, npm, ripgrep]
+    state: "{{ package_state }}"
+    update_cache: true
+    cache_valid_time: 3600
+  tags: packages
+
+- name: Check for the system Node.js and npm executables
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: ["{{ pi_node_executable }}", "{{ pi_npm_executable }}"]
+  register: pi_runtime
+
+- name: Report deferred Pi setup in fresh-machine check mode
+  ansible.builtin.debug:
+    msg: Node.js/npm are not installed yet; Pi installation is deferred until apply.
+  when:
+    - ansible_check_mode
+    - not (pi_runtime.results | map(attribute='stat.exists') | min)
+
+- name: Configure user-owned Pi tools
+  when: pi_runtime.results | map(attribute='stat.exists') | min
+  environment:
+    HOME: "{{ workstation_home }}"
+    # Use the apt-managed Node.js, not a shell-specific NVM installation.
+    PATH: "{{ workstation_home }}/.local/bin:{{ pi_node_executable | dirname }}:/usr/bin:/bin:{{ ansible_env.PATH }}"
+    NPM_CONFIG_PREFIX: "{{ workstation_home }}/.local"
+    PI_CODING_AGENT_DIR: "{{ workstation_home }}/.pi/agent"
+  block:
+    - name: Read the system Node.js version
+      ansible.builtin.command:
+        argv: ["{{ pi_node_executable }}", --version]
+      register: pi_node_version
+      changed_when: false
+      check_mode: false
+
+    - name: Require a supported Node.js version
+      ansible.builtin.assert:
+        that:
+          - pi_node_version.stdout is match('^v')
+          - pi_node_version.stdout[1:] is version('22.19.0', '>=')
+        fail_msg: Pi requires Node.js 22.19 or newer.
+
+    - name: Create a user-owned npm prefix
+      ansible.builtin.file:
+        path: "{{ workstation_home }}/.local"
+        state: directory
+        mode: "0755"
+
+    - name: Check for managed npm tools
+      ansible.builtin.stat:
+        path: "{{ workstation_home }}/.local/bin/{{ item.binary }}"
+      loop:
+        - binary: pi
+          package: "{{ pi_npm_package }}"
+          ignore_scripts: true
+        - binary: ast-grep
+          package: "{{ ast_grep_npm_package }}"
+          ignore_scripts: false
+      register: pi_tool_status
+
+    - name: Install missing or explicitly requested npm tools as the normal user
+      ansible.builtin.command:
+        argv: >-
+          {{ [pi_npm_executable, 'install', '--global', '--prefix', workstation_home + '/.local']
+             + (['--ignore-scripts'] if item.item.ignore_scripts else [])
+             + [item.item.package] }}
+      loop: "{{ pi_tool_status.results }}"
+      loop_control:
+        label: "{{ item.item.package }}"
+      when:
+        - not item.stat.exists or update_pi | bool
+        - not ansible_check_mode
+      changed_when: true
+
+    - name: Check for the managed Pi executable
+      ansible.builtin.stat:
+        path: "{{ workstation_home }}/.local/bin/pi"
+      register: pi_binary
+
+    - name: Check for existing Pi settings
+      ansible.builtin.stat:
+        path: "{{ workstation_home }}/.pi/agent/settings.json"
+      register: pi_settings_file
+
+    - name: Read existing Pi settings without exposing their contents
+      ansible.builtin.slurp:
+        src: "{{ workstation_home }}/.pi/agent/settings.json"
+      register: pi_settings
+      no_log: true
+      when: pi_settings_file.stat.exists
+
+    - name: Determine already declared Pi packages
+      ansible.builtin.set_fact:
+        pi_existing_packages: >-
+          {{ (pi_settings.content | b64decode | from_json).get('packages', [])
+             if pi_settings.content is defined else [] }}
+      no_log: true
+
+    - name: Install missing Pi extension declarations
+      ansible.builtin.command:
+        argv: ["{{ workstation_home }}/.local/bin/pi", install, "{{ item }}"]
+      loop: "{{ pi_packages }}"
+      vars:
+        pi_existing_sources: >-
+          {{ (pi_existing_packages | select('string') | list)
+             + (pi_existing_packages | select('mapping') | map(attribute='source') | list) }}
+      when:
+        - pi_binary.stat.exists
+        - item not in pi_existing_sources
+        - not ansible_check_mode
+      changed_when: true
+
+    # Reconcile declarations restored by dotfiles even when their install data is absent.
+    - name: Restore or explicitly update declared Pi extensions
+      ansible.builtin.command:
+        argv: ["{{ workstation_home }}/.local/bin/pi", update, --extensions]
+      when:
+        - pi_binary.stat.exists
+        - not pi_tool_status.results[0].stat.exists or update_pi_extensions | bool
+        - not ansible_check_mode
+      changed_when: true

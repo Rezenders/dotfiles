@@ -42,6 +42,20 @@
       ansible.builtin.import_tasks: tasks/applications.yml
       tags: applications
 
+    - name: Install Tree-sitter CLI and configure Cargo PATH
+      ansible.builtin.import_tasks: tasks/tree_sitter.yml
+      tags: tree_sitter
+
+    - name: Install Pi and extension dependencies
+      ansible.builtin.import_tasks: tasks/pi.yml
+      when: install_pi | bool
+      tags: pi
+
+    - name: Install and configure Docker Engine
+      ansible.builtin.import_tasks: tasks/docker.yml
+      when: install_docker | bool
+      tags: docker
+
     - name: Configure services
       ansible.builtin.import_tasks: tasks/services.yml
       tags: services

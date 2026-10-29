@@ -130,12 +130,6 @@ do
   vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
   vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
-  -- NOTE: Some terminals have colliding keymaps or are not able to send distinct keycodes
-  -- vim.keymap.set("n", "<C-S-h>", "<C-w>H", { desc = "Move window to the left" })
-  -- vim.keymap.set("n", "<C-S-l>", "<C-w>L", { desc = "Move window to the right" })
-  -- vim.keymap.set("n", "<C-S-j>", "<C-w>J", { desc = "Move window to the lower" })
-  -- vim.keymap.set("n", "<C-S-k>", "<C-w>K", { desc = "Move window to the upper" })
-
   -- [[ Basic Autocommands ]]
   --  See `:help lua-guide-autocommands`
 
@@ -147,10 +141,51 @@ do
     group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
     callback = function() vim.hl.hl_op() end,
   })
+
   -- Toggle comments with Ctrl + /
   vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment' })
   vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment' })
 
+  local excluded_filetypes = {
+    markdown = true,
+    rmd = true,
+    quarto = true,
+    diff = true,
+    gitcommit = true,
+  }
+
+  local function trim_trailing_whitespace()
+    local view = vim.fn.winsaveview()
+
+    vim.cmd([[silent! keeppatterns keepjumps %s/\s\+$//e]])
+
+    vim.fn.winrestview(view)
+  end
+
+  vim.api.nvim_create_autocmd("BufWritePre", {
+    group = vim.api.nvim_create_augroup(
+      "trim-trailing-whitespace",
+      { clear = true }
+    ),
+
+    pattern = "*",
+
+    callback = function(args)
+      local buf = args.buf
+
+      -- Ignore special and binary buffers
+      if vim.bo[buf].buftype ~= "" or vim.bo[buf].binary then
+        return
+      end
+
+      -- Ignore filetypes where whitespace may be significant
+      if excluded_filetypes[vim.bo[buf].filetype] then
+        return
+      end
+
+      trim_trailing_whitespace()
+    end,
+  })
 end
 
 -- ============================================================
@@ -244,7 +279,14 @@ do
   -- We first install it from https://github.com/NMAC427/guess-indent.nvim
   -- and then call its `setup()` function to start it with default settings.
   vim.pack.add { gh 'NMAC427/guess-indent.nvim' }
-  require('guess-indent').setup {}
+  require('guess-indent').setup {
+    filetype_exclude = {
+        'netrw',
+        'tutor',
+        'tex',
+        'plaintex',
+    },
+  }
 
   -- Here is a more advanced configuration example that passes options to `gitsigns.nvim`
   --
@@ -806,7 +848,9 @@ do
   -- [[ Snippet Engine ]]
 
   vim.pack.add { { src = gh 'L3MON4D3/LuaSnip', version = vim.version.range '2.*' } }
-  require('luasnip').setup {}
+  require('luasnip').setup {
+    enable_autosnippets = true,
+  }
 
   -- `friendly-snippets` contains a variety of premade snippets.
   --    See the README about individual language/framework/plugin snippets:
@@ -896,7 +940,7 @@ do
     -- the rust implementation via `'prefer_rust_with_warning'`
     --
     -- See `:help blink-cmp-config-fuzzy` for more information
-    fuzzy = { implementation = 'lua' },
+    fuzzy = { implementation = 'prefer_rust' },
 
     -- Shows a signature help window while you type arguments for a function
     signature = { enabled = true },
@@ -1004,7 +1048,7 @@ do
   -- require 'custom.plugins.git'
 end
 
--- kitty integration
+-- Section 11: kitty integration
 do
   -- [[ Scrollback browsing ]]
   vim.pack.add { gh 'mikesmithgh/kitty-scrollback.nvim' }
@@ -1068,7 +1112,7 @@ do
   vim.keymap.set('n', '<M-j>', splits.resize_down)
   vim.keymap.set('n', '<M-k>', splits.resize_up)
   vim.keymap.set('n', '<M-l>', splits.resize_right)
- 
+
   local function kitty_split(direction)
     vim.fn.jobstart({
       'kitten', '@', 'launch',
@@ -1088,39 +1132,58 @@ do
   end, { desc = 'Kitty horizontal split' })
 end
 
--- Latex integration
+-- Section 12: Latex integration
 do
-  -- To use the most recent version from git, you can do simply:
-  vim.pack.add { "https://github.com/lervag/vimtex" }
+  -- Plugins
+  vim.pack.add {
+    gh 'lervag/vimtex',
+    gh '/luasnip-latex-snippets.nvim',
+  }
 
   vim.g.vimtex_view_method = "zathura_simple"
+
+  -- Load mathematical LaTeX snippets
+  require("luasnip-latex-snippets").setup({
+      use_treesitter = false,
+      allow_on_markdown = false,
+  })
+
   vim.api.nvim_create_autocmd("FileType", {
         pattern = "tex",
-        callback = function()
+        callback = function(args)
+            vim.keymap.set("n", "<leader>lf", function()
+                vim.lsp.buf.format({
+                    async = true,
+                    filter = function(client)
+                        return client.name == "texlab"
+                    end,
+                })
+            end, {
+                buffer = args.buf,
+                desc = "Format LaTeX document",
+            })
+
+            -- spell checking
             vim.opt_local.spell = true
             vim.opt_local.spelllang = "en_us"
 
+            -- Line wrapping
             vim.opt_local.wrap = true
             vim.opt_local.linebreak = true
+
+            -- show math symbols as unicode
+            vim.opt_local.conceallevel = 2
+            vim.opt_local.concealcursor = ""
+
+            -- indentation set to 2 spaces
+            -- LaTeX indentation
+            vim.opt_local.expandtab = true
+            vim.opt_local.shiftwidth = 2
+            vim.opt_local.tabstop = 2
+            vim.opt_local.softtabstop = 2
         end,
     })
-  -- Format LaTeX using TexLab and latexindent
-  vim.api.nvim_create_autocmd("FileType", {
-      pattern = "tex",
-      callback = function(args)
-          vim.keymap.set("n", "<leader>lf", function()
-              vim.lsp.buf.format({
-                  async = true,
-                  filter = function(client)
-                      return client.name == "texlab"
-                  end,
-              })
-          end, {
-              buffer = args.buf,
-              desc = "Format LaTeX document",
-          })
-      end,
-  })
+
 end
 
 

@@ -1,137 +1,277 @@
 # Personal Ubuntu workstation
 
 Ansible configuration for personal **Ubuntu 26.04 amd64** computers.
-The current machine reports 26.04.1 LTS / resolute, not 26.06.
-Other releases and ARM computers are intentionally rejected for now
-(Spotify's apt repository does not provide an ARM64 client).
 
-## Ownership
+## Features
 
-- The existing bare Git repository at ~/.cfg manages dotfiles.
-- Ansible manages packages, apt repositories and the Syncthing service.
-- Bootstrap installs prerequisites and checks out a new dotfiles clone.
-- No secrets, SSH keys, Syncthing identities, browser profiles, GNOME settings,
-  project directories or personal data are copied.
-- No background synchronization or unattended system changes are configured.
-
-## First review
-
-Read vars.yml and the task files. Defaults include:
-- Neovim unstable PPA.
-- Upstream Syncthing stable-v2 (matches the existing machine).
+- Development tools: Git, Go, Neovim from the unstable PPA, ripgrep, and
+  Tree-sitter CLI installed with Cargo.
+- Kitty terminal and common GNOME desktop applications.
+- Pi coding agent, ast-grep CLI, and five Pi extension packages:
+  - `git:github.com/code-yeongyu/pi-ast-grep`
+  - `npm:pi-web-access`
+  - `git:github.com/samfoy/pi-lsp-extension`
+  - `npm:pi-subagents`
+  - `npm:pi-nvim`
+- Docker Engine from Docker's official stable apt repository, with Compose
+  and Buildx plugins.
 - Mozilla's apt Firefox, replacing Firefox Snap.
-- Spotify and Claude Desktop upstream apt sources.
-- Zed and Claude CLI vendor installers, run WITHOUT sudo.
-- Full TeX Live plus latexmk. This is a large download and disk allocation.
-- Packages are upgraded to the latest candidate from the configured apt sources.
+- Upstream Syncthing stable-v2 and its per-user system service.
+- Spotify, Claude Desktop, Zed, and Claude CLI.
+- Full TeX Live and latexmk.
 
-gnome-browser-connector replaces the obsolete chrome-gnome-shell package.
-Repositories and keys are downloaded over HTTPS; apt verifies repository signatures.
-Vendor shell installers are not pinned or sandboxed. Review their downloaded scripts
-under ~/.cache/workstation/installers if that trust model is unsuitable.
+The bare Git repository at `~/.cfg` manages dotfiles. Ansible manages software,
+apt sources, and system services. Bootstrap installs prerequisites and checks out
+dotfiles; it does not apply the playbook.
 
-This is not a complete inventory of the existing machine: Docker, ROS, Kitty,
-Node/Bun, pi, and hardware-specific tools are not installed by this first version.
-Existing unrelated apt sources are left alone.
+Credentials, SSH keys, conversation history, browser profiles, Syncthing identities,
+GNOME settings, container data, and project directories are not copied.
+ROS, Bun, and hardware-specific tools are outside the scope of this configuration.
 
-## Bootstrap a new machine
+## Requirements
 
-First commit and push these files using your existing config Git workflow.
-The bootstrap cannot retrieve uncommitted local files from another computer.
+- Ubuntu 26.04 on amd64.
+- A normal user with sudo access.
+- Internet access to Ubuntu and vendor repositories, npm, and GitHub.
+- Sufficient disk space for TeX Live, Docker, and their dependencies.
 
-Obtain bootstrap.sh from that repository and run it as your normal user:
+Other Ubuntu releases and architectures are rejected by the playbook.
+Run Ansible as your normal user, not with `sudo ansible-playbook`.
 
-    bash bootstrap.sh
+## Bootstrap
 
-Or, if the files are already present:
+Obtain `bootstrap.sh` from the
+[dotfiles repository](https://github.com/rezenders/dotfiles) and run:
 
-    bash ~/setup_ubuntu.sh
+```bash
+bash bootstrap.sh
+```
 
-Bootstrap uses sudo to install git and ansible-core. It clones the public dotfiles
-repository over HTTPS by default; override DOTFILES_URL for another repository.
-A private repository requires authentication first.
+If the dotfiles are already checked out, the wrapper is also available:
 
-Checkout never uses --force. If existing files conflict, back them up, then retry:
+```bash
+bash ~/setup_ubuntu.sh
+```
 
-    git --git-dir="$HOME/.cfg" --work-tree="$HOME" checkout
+Bootstrap uses sudo to install Git and ansible-core, then clones the public
+dotfiles repository over HTTPS. Set `DOTFILES_URL` to use another repository;
+private repositories require authentication.
 
-Bootstrap does not automatically pull or check out an existing ~/.cfg, so it cannot
-discard your local changes. It does not configure shell aliases: .bash_aliases must
-be reviewed for private/machine-specific content before tracking it in Git.
-The repository config hides untracked home files from status, but explicit
-"config add PATH" still works.
+Checkout never uses `--force`. If existing files conflict, back them up and retry:
+
+```bash
+git --git-dir="$HOME/.cfg" --work-tree="$HOME" checkout
+```
+
+An existing `~/.cfg` is left untouched: bootstrap does not automatically pull or
+check it out. Shell aliases are not configured by bootstrap. The repository hides
+untracked home files from status; explicit `config add PATH` still works.
+
+## Configure
+
+Edit `vars.yml` or supply Ansible extra variables.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `install_latex` | `true` | Install the TeX Live package set |
+| `install_personal_apps` | `true` | Install Spotify, Claude Desktop, Zed, and Claude CLI |
+| `enable_syncthing` | `true` | Install Syncthing and enable its service |
+| `install_pi` | `true` | Install Node.js, npm, Pi, ast-grep, and Pi extensions |
+| `install_docker` | `true` | Install Docker CE and enable its system service |
+| `docker_add_user_to_group` | `false` | Grant the invoking user root-equivalent Docker access |
+| `package_state` | `latest` | Upgrade managed apt packages; use `present` for missing packages only |
+| `update_vendor_apps` | `false` | Rerun Zed and Claude CLI installers |
+| `update_pi` | `false` | Reinstall/update the managed Pi and ast-grep npm packages |
+| `update_pi_extensions` | `false` | Reconcile/update all declared personal Pi packages |
+
+Kitty and ripgrep are part of the base desktop/development package lists.
+Disabling an option skips management; it does not uninstall software, remove
+repositories, revoke existing Docker group membership, or stop existing services.
+Removing entries from package lists does not uninstall them.
+
+Example without LaTeX or personal applications:
+
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass -e '{"install_latex": false, "install_personal_apps": false}'
+```
 
 ## Preview and apply
 
-Run as your normal user, not "sudo ansible-playbook":
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --syntax-check
 
-    ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --syntax-check
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass --check --diff
 
-    ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
-      --ask-become-pass --check --diff
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass
+```
 
-    ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
-      --ask-become-pass
+Check mode cannot fully simulate a fresh installation. New apt sources cannot be
+refreshed, so their packages may not be found. npm installations, Pi package
+commands, vendor installers, and service changes are skipped. Pi setup is deferred
+when Node.js or npm is absent. Diffs can expose configuration; do not publish
+sensitive output.
 
-Check mode is not a complete simulation. On a fresh computer, new repositories
-cannot be refreshed and their packages may not be found. Vendor installers and
-service changes are skipped in check mode. get_url may report predicted changes.
-Diffs can reveal configuration; do not publish sensitive output.
+Task tags are `repositories`, `packages`, `applications`, `tree_sitter`, `pi`,
+`docker`, and `services`. Docker requires its apt source to be configured first:
 
-Full application has NOT been performed during initial implementation.
-Review a full privileged dry run before applying.
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass --tags repositories,docker
 
-## Update a stale machine
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass --tags pi
+```
 
-    config status
-    # Resolve/commit local changes before pulling.
-    config pull --ff-only
-    ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --ask-become-pass
+## Tree-sitter CLI
 
-This upgrades only managed apt packages, not every OS package. Dependencies may
-also be upgraded by apt. Normal Ubuntu system updates remain a separate task.
-Removing a package from vars.yml does not uninstall it.
-Setting an install/enable option to false skips management; it does not uninstall
-existing applications, remove their repositories, or stop existing services.
+The `tree_sitter` tasks install Ubuntu's Cargo and native build tools, then run
+`cargo install --locked tree-sitter-cli` as the normal user. The CLI is installed
+under `~/.cargo/bin` and skipped if `~/.cargo/bin/tree-sitter` already exists.
+An existing Cargo installation in `~/.cargo/bin` takes precedence over system Cargo.
+The Cargo installation step is skipped in check mode.
 
-Zed and Claude CLI installers run only when missing, unless explicitly requested:
+The playbook adds this line to `~/.profile` for future login shells. To use the CLI
+in your current shell immediately, also run:
 
-    ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
-      --tags applications -e update_vendor_apps=true
+```bash
+export PATH="$HOME/.cargo/bin:$PATH"
+tree-sitter --version
+```
 
-Already-installed vendor apps can also use their own update mechanisms.
-Running a vendor installer again is not guaranteed to produce zero changes.
+Shells that do not read `~/.profile` need the same export in their startup file.
+To install just these tools:
 
-To install missing apt packages without requesting upgrades:
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass --tags tree_sitter
+```
 
-    ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
-      --ask-become-pass -e package_state=present
+`--locked` uses the crate's lockfile but does not pin the CLI release. Existing
+installations are not automatically upgraded; rerun the Cargo install command
+manually to request an update.
 
-For a future professional-machine profile:
+## Pi and extensions
 
-    ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
-      --ask-become-pass -e '{"install_latex": false, "install_personal_apps": false}'
+Pi and ast-grep are installed as the normal user with npm under `~/.local`.
+The playbook installs Ubuntu's Node.js and npm and requires Node.js 22.19 or newer.
+It uses explicit system executable paths rather than loading an interactive NVM
+environment. Override `pi_node_executable` and `pi_npm_executable` if needed.
 
-This is only an override example, not a fully developed work profile. Firefox,
-the Neovim PPA, common desktop packages and Syncthing are still managed.
+Add `~/.local/bin` to your shell's `PATH`, ahead of other Pi installations:
 
-## Important behavior
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+pi --version
+ast-grep --version
+rg --version
+```
 
-- The old Mozilla .list file from setup_ubuntu.sh is replaced by mozilla.sources.
-- Known source files are managed, so manual edits to them will be overwritten.
-- Other custom duplicate source definitions may need manual reconciliation.
-- Firefox's apt replacement is installed before removing its Snap. Browser profile
-  migration is not automated; back up your browser data before the first apply.
-- A Neovim deb822 PPA already created by Ubuntu's add-apt-repository is reused.
-- Syncthing runs via syncthing@YOUR_USER.service. Devices must be paired separately.
-  Do not also run a separate user-level Syncthing instance on the same data.
-- Upstream package/key URL changes can require repository task updates.
+Existing NVM, Snap, or manually installed tools are not removed. The managed
+installation may coexist with them. On Linux, use `ast-grep` rather than `sg`,
+which is also the name of an unrelated system command.
 
-## Verification
+Extension sources are declared in `pi_packages`. Missing declarations are added
+using `pi install`, preserving other settings and packages in
+`~/.pi/agent/settings.json`. Existing declarations are reconciled when Pi is
+first installed by the playbook or when `update_pi_extensions=true`.
+Pi commands use the personal `~/.pi/agent` directory, not project-local settings.
 
-    bash -n ~/setup_ubuntu.sh ~/.config/workstation/bootstrap.sh
-    python3 ~/.config/workstation/tests/test_bootstrap.py
+Pi and ast-grep install only when missing unless `update_pi=true`.
+For version pinning, set `pi_npm_package` or `ast_grep_npm_package` to an npm
+specification with a version, and use versioned npm sources or Git refs in
+`pi_packages`. Changing an already installed CLI specification requires an
+explicit update. Defaults are unpinned.
 
-The bootstrap tests use temporary homes and a local test Git repository.
-They stub sudo, so no system packages are installed.
-A disposable Ubuntu VM is still recommended for a full fresh-machine test.
+Pi authentication is configured separately through `/login` or provider API keys.
+Language servers used by the LSP extension must be installed separately.
+No credentials or session data are managed by this playbook.
+
+## Docker
+
+The playbook installs `docker-ce`, `docker-ce-cli`, `containerd.io`,
+`docker-buildx-plugin`, and `docker-compose-plugin`. It enables and starts
+`docker.service` without changing daemon settings or managing containers.
+
+Existing distro Docker/containerd packages cause a failure with migration
+instructions instead of being automatically removed. Other custom Docker apt
+source definitions may require manual reconciliation.
+
+By default, use Docker with sudo. To grant your user access:
+
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass --tags repositories,docker -e docker_add_user_to_group=true
+```
+
+**Docker group membership is root-equivalent.** Log out and back in after adding
+the group. Docker-published container ports can bypass UFW rules; review
+[Docker's firewall documentation](https://docs.docker.com/engine/network/packet-filtering-firewalls/)
+before exposing services.
+
+Verify the installation:
+
+```bash
+sudo docker version
+sudo docker compose version
+sudo docker buildx version
+# Optional: downloads and runs a test container.
+sudo docker run --rm hello-world
+```
+
+## Updates
+
+With the `config` alias configured for the dotfiles repository:
+
+```bash
+config status
+# Resolve local changes before pulling.
+config pull --ff-only
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --ask-become-pass
+```
+
+Only managed apt packages are upgraded, although dependencies may also change.
+Normal Ubuntu system updates remain separate. Docker upgrades may restart its
+daemon and affect running containers.
+
+To update Pi, ast-grep, and all declared Pi packages explicitly:
+
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass --tags pi -e update_pi=true -e update_pi_extensions=true
+```
+
+To rerun the Zed and Claude CLI installers:
+
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --tags applications -e update_vendor_apps=true
+```
+
+Vendor installers run as the normal user and are cached under
+`~/.cache/workstation/installers`. They are not pinned or sandboxed.
+Pi extensions and npm lifecycle scripts also execute third-party code;
+review package sources before installing.
+
+## Service and repository behavior
+
+- Known apt source files are managed and may be overwritten; unrelated sources
+  are left alone.
+- Firefox's apt replacement is installed before removing its Snap. Browser
+  profile migration is not automated.
+- Syncthing runs as `syncthing@YOUR_USER.service`. Pair devices separately and do
+  not run another Syncthing instance on the same data.
+
+## Tests
+
+```bash
+bash -n ~/setup_ubuntu.sh ~/.config/workstation/bootstrap.sh
+python3 -m unittest discover -s ~/.config/workstation/tests -v
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --syntax-check
+```
+
+Tests use temporary homes and stub privileged operations and package commands.
+The Pi task tests require `ansible-playbook` on `PATH`. A disposable Ubuntu VM
+is recommended for end-to-end installation testing.
