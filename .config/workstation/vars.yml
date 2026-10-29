@@ -43,6 +43,8 @@ common_packages:
   - unzip
   - golang-go
   - neovim
+  - fzf
+  - fd-find
   - ripgrep
   - zathura
   - zathura-cb

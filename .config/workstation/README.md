@@ -4,8 +4,8 @@ Ansible configuration for personal **Ubuntu 26.04 amd64** computers.
 
 ## Features
 
-- Development tools: Git, Go, Neovim from the unstable PPA, ripgrep, and
-  Tree-sitter CLI installed with Cargo.
+- Development tools: Git, Go, Neovim from the unstable PPA, fzf, fd-find,
+  ripgrep, and Tree-sitter CLI installed with Cargo.
 - Kitty terminal and common GNOME desktop applications.
 - Pi coding agent, ast-grep CLI, and five Pi extension packages:
   - `git:github.com/code-yeongyu/pi-ast-grep`
@@ -84,7 +84,11 @@ Edit `vars.yml` or supply Ansible extra variables.
 | `update_pi` | `false` | Reinstall/update the managed Pi and ast-grep npm packages |
 | `update_pi_extensions` | `false` | Reconcile/update all declared personal Pi packages |
 
-Kitty and ripgrep are part of the base desktop/development package lists.
+Kitty, fzf, fd-find, and ripgrep are part of the base desktop/development package
+lists. Neovim's fzf-lua pickers require `fzf`; `ripgrep` supplies `rg` for live grep
+and the configuration-file picker. `fd-find` is an optional faster file finder;
+Ubuntu names its binary `fdfind`, which fzf-lua detects automatically. The default
+Neovim previewer does not require `bat`.
 Disabling an option skips management; it does not uninstall software, remove
 repositories, revoke existing Docker group membership, or stop existing services.
 Removing entries from package lists does not uninstall them.
