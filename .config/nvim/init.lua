@@ -698,6 +698,9 @@ do
     end,
   })
 
+  -- Client-side LTeX commands: dictionary, false positives, and rule disabling.
+  vim.pack.add { gh 'barreiroleo/ltex_extra.nvim' }
+
   -- Enable the following language servers
   --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
   --  See `:help lsp-config` for information about keys and how to configure
@@ -723,6 +726,12 @@ do
     -- Grammar and spelling checking
     ltex_plus = {
         filetypes = { "tex", "plaintex", "markdown" },
+        on_attach = function()
+            require("ltex_extra").setup {
+                load_langs = { "en-US" },
+                path = ".ltex",
+            }
+        end,
         settings = {
             ltex = {
                 language = "en-US",
@@ -795,7 +804,7 @@ do
   -- You can press `g?` for help in this menu.
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
-    -- You can add other tools here that you want Mason to install
+    'prettier', -- Markdown formatting
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
@@ -804,6 +813,21 @@ do
     vim.lsp.config(name, server)
     vim.lsp.enable(name)
   end
+end
+
+-- Markdown formatting (manual only).
+do
+  vim.pack.add { gh 'stevearc/conform.nvim' }
+
+  require('conform').setup {
+    formatters_by_ft = {
+      markdown = { 'prettier' },
+    },
+  }
+
+  vim.keymap.set('n', '<leader>mf', function()
+    require('conform').format { async = true }
+  end, { desc = 'Format document' })
 end
 
 -- ============================================================
@@ -1109,7 +1133,7 @@ do
     gh 'iurimateus/luasnip-latex-snippets.nvim',
   }
 
-  vim.g.vimtex_view_method = "zathura_simple"
+  vim.g.vimtex_view_method = vim.g.vimtex_view_method or "zathura_simple"
 
   -- Load mathematical LaTeX snippets
   require("luasnip-latex-snippets").setup({

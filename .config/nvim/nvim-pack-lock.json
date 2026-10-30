@@ -27,6 +27,10 @@
       "rev": "c09ca05bfa0641754516f13294d73d3799a02fc8",
       "src": "https://github.com/micangl/cmp-vimtex"
     },
+    "conform.nvim": {
+      "rev": "016802de402556da54c36bd7359b441266b01cdd",
+      "src": "https://github.com/stevearc/conform.nvim"
+    },
     "diffview.nvim": {
       "rev": "4516612fe98ff56ae0415a259ff6361a89419b0a",
       "src": "https://github.com/sindrets/diffview.nvim"
@@ -70,6 +74,10 @@
     "kitty-scrollback.nvim": {
       "rev": "4994c85e0f291598d0748488653c83cb698fd281",
       "src": "https://github.com/mikesmithgh/kitty-scrollback.nvim"
+    },
+    "ltex_extra.nvim": {
+      "rev": "49ea83c231139d98b7c9668c99e7b4591421b056",
+      "src": "https://github.com/barreiroleo/ltex_extra.nvim"
     },
     "luasnip-latex-snippets.nvim": {
       "rev": "84d37a68b5858bafe75573f8ea6898ba095fef45",
