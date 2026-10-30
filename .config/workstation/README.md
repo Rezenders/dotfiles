@@ -26,7 +26,9 @@ apt sources, and system services. Bootstrap installs prerequisites and checks ou
 dotfiles; it does not apply the playbook.
 
 Credentials, SSH keys, conversation history, browser profiles, Syncthing identities,
-GNOME settings, container data, and project directories are not copied.
+GNOME settings, container data, and project directories are not copied by bootstrap
+or Ansible. GNOME shortcuts can be exported and applied separately with
+[`~/.config/gnome/shortcuts.sh`](../gnome/README.md).
 ROS, Bun, and hardware-specific tools are outside the scope of this configuration.
 
 ## Requirements
