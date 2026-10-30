@@ -1,0 +1,79 @@
+---
+- name: Install native build dependencies for tdf
+  become: true
+  ansible.builtin.apt:
+    name: [git, curl, ca-certificates, build-essential, clang, libfontconfig1-dev, pkg-config]
+    state: "{{ package_state }}"
+    update_cache: true
+    cache_valid_time: 3600
+  tags: packages
+
+- name: Check whether tdf is installed
+  ansible.builtin.stat:
+    path: "{{ workstation_home }}/.cargo/bin/tdf"
+  register: tdf_binary
+
+- name: Build missing tdf with a current Rust toolchain
+  when:
+    - not tdf_binary.stat.exists
+    - not ansible_check_mode
+  environment:
+    HOME: "{{ workstation_home }}"
+    CARGO_HOME: "{{ workstation_home }}/.cargo"
+    RUSTUP_HOME: "{{ workstation_home }}/.rustup"
+    PATH: "{{ workstation_home }}/.cargo/bin:/usr/bin:/bin:{{ ansible_env.PATH }}"
+  block:
+    - name: Check for the user's rustup installation
+      ansible.builtin.stat:
+        path: "{{ workstation_home }}/.cargo/bin/rustup"
+      register: tdf_rustup
+
+    - name: Create a user-owned installer cache
+      ansible.builtin.file:
+        path: "{{ workstation_home }}/.cache/workstation/installers"
+        state: directory
+        mode: "0700"
+      when: not tdf_rustup.stat.exists
+
+    - name: Download rustup installer
+      ansible.builtin.get_url:
+        url: https://sh.rustup.rs
+        dest: "{{ workstation_home }}/.cache/workstation/installers/rustup-init.sh"
+        mode: "0600"
+      when: not tdf_rustup.stat.exists
+
+    - name: Install rustup as the normal user
+      ansible.builtin.command:
+        argv:
+          - /bin/sh
+          - "{{ workstation_home }}/.cache/workstation/installers/rustup-init.sh"
+          - -y
+          - --profile
+          - minimal
+          - --default-toolchain
+          - stable
+          - --no-modify-path
+        creates: "{{ workstation_home }}/.cargo/bin/rustup"
+      when: not tdf_rustup.stat.exists
+
+    - name: Ensure the latest stable Rust toolchain is available for tdf
+      ansible.builtin.command:
+        argv: ["{{ workstation_home }}/.cargo/bin/rustup", update, stable, --no-self-update]
+      changed_when: true
+
+    - name: Install tdf as the normal user using stable Rust
+      ansible.builtin.command:
+        argv:
+          - "{{ workstation_home }}/.cargo/bin/cargo"
+          - +stable
+          - install
+          - --git
+          - https://github.com/itsjunetime/tdf.git
+        creates: "{{ workstation_home }}/.cargo/bin/tdf"
+
+- name: Include Cargo-installed tools in the login shell PATH
+  ansible.builtin.lineinfile:
+    path: "{{ workstation_home }}/.profile"
+    line: 'export PATH="$HOME/.cargo/bin:$PATH"'
+    create: true
+    mode: "0644"
