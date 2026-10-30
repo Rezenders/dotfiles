@@ -6,6 +6,7 @@ Ansible configuration for personal **Ubuntu 26.04 amd64** computers.
 
 - Development tools: Git, Go, Neovim from the unstable PPA, fzf, fd-find,
   ripgrep, and Tree-sitter CLI installed with Cargo.
+- tdf terminal PDF viewer, built from its upstream Git repository with Cargo.
 - Kitty terminal and common GNOME desktop applications.
 - Pi coding agent, ast-grep CLI, and five Pi extension packages:
   - `git:github.com/code-yeongyu/pi-ast-grep`
@@ -76,6 +77,7 @@ Edit `vars.yml` or supply Ansible extra variables.
 | `install_latex` | `true` | Install the TeX Live package set |
 | `install_personal_apps` | `true` | Install Spotify, Claude Desktop, Zed, and Claude CLI |
 | `enable_syncthing` | `true` | Install Syncthing and enable its service |
+| `install_tdf` | `true` | Build and install the tdf terminal PDF viewer with Cargo |
 | `install_pi` | `true` | Install Node.js, npm, Pi, ast-grep, and Pi extensions |
 | `install_docker` | `true` | Install Docker CE and enable its system service |
 | `docker_add_user_to_group` | `false` | Grant the invoking user root-equivalent Docker access |
@@ -118,7 +120,7 @@ commands, vendor installers, and service changes are skipped. Pi setup is deferr
 when Node.js or npm is absent. Diffs can expose configuration; do not publish
 sensitive output.
 
-Task tags are `repositories`, `packages`, `applications`, `tree_sitter`, `pi`,
+Task tags are `repositories`, `packages`, `applications`, `tree_sitter`, `tdf`, `pi`,
 `docker`, and `services`. Docker requires its apt source to be configured first:
 
 ```bash
@@ -156,6 +158,32 @@ ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
 `--locked` uses the crate's lockfile but does not pin the CLI release. Existing
 installations are not automatically upgraded; rerun the Cargo install command
 manually to request an update.
+
+## tdf terminal PDF viewer
+
+The `tdf` tasks install Git, curl, CA certificates, build-essential, Clang,
+Fontconfig development headers, and pkg-config. Ubuntu's apt Rust/Cargo may be
+older than tdf requires, so these tasks install rustup as the normal user when
+missing and update its stable toolchain before building a missing tdf binary.
+The build explicitly runs `~/.cargo/bin/cargo +stable install --git
+https://github.com/itsjunetime/tdf.git`, avoiding system Cargo and any older
+default toolchain. Existing rustup defaults are not changed.
+
+The rustup installer is downloaded from `https://sh.rustup.rs` and cached under
+`~/.cache/workstation/installers`; it runs without sudo.
+
+The binary is installed under `~/.cargo/bin`, which is added to `~/.profile`.
+For the current shell, run `export PATH="$HOME/.cargo/bin:$PATH"`.
+Installation is skipped if `~/.cargo/bin/tdf` exists, and in check mode.
+
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass --tags tdf
+```
+
+The Git source is unpinned and builds third-party code. Existing installations
+are not automatically upgraded. To update manually, run `rustup update stable`
+and `cargo +stable install --git https://github.com/itsjunetime/tdf.git`.
 
 ## Pi and extensions
 

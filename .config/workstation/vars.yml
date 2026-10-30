@@ -3,6 +3,7 @@
 install_latex: true
 install_personal_apps: true
 enable_syncthing: true
+install_tdf: true
 install_pi: true
 install_docker: true
 # Docker group membership is root-equivalent; opt in explicitly.

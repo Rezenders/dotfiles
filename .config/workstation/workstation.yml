@@ -46,6 +46,11 @@
       ansible.builtin.import_tasks: tasks/tree_sitter.yml
       tags: tree_sitter
 
+    - name: Install tdf terminal PDF viewer
+      ansible.builtin.import_tasks: tasks/tdf.yml
+      when: install_tdf | bool
+      tags: tdf
+
     - name: Install Pi and extension dependencies
       ansible.builtin.import_tasks: tasks/pi.yml
       when: install_pi | bool
