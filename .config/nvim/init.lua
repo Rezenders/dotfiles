@@ -726,12 +726,8 @@ do
     -- Grammar and spelling checking
     ltex_plus = {
         filetypes = { "tex", "plaintex", "markdown" },
-        on_attach = function()
-            require("ltex_extra").setup {
-                load_langs = { "en-US" },
-                path = ".ltex",
-            }
-        end,
+        -- Bind deferred dictionary updates to the attached LTeX client.
+        on_attach = require('custom.ltex_extra').on_attach,
         settings = {
             ltex = {
                 language = "en-US",
