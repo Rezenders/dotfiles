@@ -4,13 +4,14 @@ set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 settings_dir="$script_dir/shortcuts"
-names=(window-manager shell mutter mutter-wayland media-keys)
+names=(window-manager shell mutter mutter-wayland media-keys focus-changer)
 paths=(
   /org/gnome/desktop/wm/keybindings/
   /org/gnome/shell/keybindings/
   /org/gnome/mutter/keybindings/
   /org/gnome/mutter/wayland/keybindings/
   /org/gnome/settings-daemon/plugins/media-keys/
+  /org/gnome/shell/extensions/focus-changer/
 )
 
 usage() {
@@ -21,6 +22,7 @@ usage() {
     'apply   Back up current settings, then load those snapshots.' \
     '' \
     'Run as your normal user inside a GNOME desktop session.' \
+    'Includes Focus Changer extension shortcuts (extension installed separately).' \
     'The media-keys snapshot includes custom shortcuts and media-key preferences.' \
     'Applying overlays settings; it does not reset unlisted destination settings.'
 }

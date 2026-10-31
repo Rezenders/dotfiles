@@ -30,12 +30,56 @@ snapshots. Backups are not stored with the tracked configuration.
 To restore a backup, run `dconf load PATH < FILE` for each file, using the
 corresponding GNOME path from `shortcuts.sh`.
 
+## Focus Changer: additional Vim-style shortcuts
+
+Install and enable Focus Changer on both machines. Its settings live under
+`/org/gnome/shell/extensions/focus-changer/`, separately from GNOME's built-in
+shortcuts. The sync script includes this subtree as `focus-changer.dconf`.
+After updating an older checkout, rerun `export` on the source machine to
+create this additional snapshot before applying on the destination.
+
+To keep the extension's default Ctrl+Super+arrow bindings and also add
+Super+h/j/k/l (left/down/up/right), run:
+
+```bash
+dconf write /org/gnome/shell/extensions/focus-changer/focus-left "['<Control><Super>Left', '<Super>h']"
+dconf write /org/gnome/shell/extensions/focus-changer/focus-down "['<Control><Super>Down', '<Super>j']"
+dconf write /org/gnome/shell/extensions/focus-changer/focus-up "['<Control><Super>Up', '<Super>k']"
+dconf write /org/gnome/shell/extensions/focus-changer/focus-right "['<Control><Super>Right', '<Super>l']"
+```
+
+These commands replace each direction's shortcut list with the two shown;
+include any other custom bindings you want to retain.
+
+GNOME normally reserves Super+h for minimize and Super+l for lock screen.
+Inspect their current bindings before changing them:
+
+```bash
+gsettings get org.gnome.desktop.wm.keybindings minimize
+gsettings get org.gnome.settings-daemon.plugins.media-keys screensaver
+```
+
+If they are the defaults, release Super+h and move lock screen to Super+Escape:
+
+```bash
+gsettings set org.gnome.desktop.wm.keybindings minimize "[]"
+gsettings set org.gnome.settings-daemon.plugins.media-keys screensaver "['<Super>Escape']"
+```
+
+If those lists contain other bindings you want to keep, remove only the
+conflicting entries instead. Check that your replacement lock shortcut works.
+If Focus Changer does not pick up the changes immediately, disable and re-enable
+it in the Extensions app. Then run `export`, commit/push the snapshots, and
+run `apply` on the other machine. The conflict changes above are also captured
+by the window-manager and media-keys snapshots.
+
 ## Scope and limitations
 
 - Covers window-manager, Shell, Mutter, Wayland Mutter, and media-key settings.
 - The media-keys subtree includes custom application shortcuts, their registered
   paths, and other media-key preferences (not only shortcut bindings).
-- Extension-specific shortcuts and settings outside these subtrees are not included.
+- Includes Focus Changer settings; other extension-specific settings are not included.
+  This does not install or enable the extension.
 - Exports contain explicitly stored settings, not a full copy of GNOME defaults.
   Empty snapshot files are valid.
 - Applying overlays stored settings, without resetting unspecified destination
