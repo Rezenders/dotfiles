@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+SERVER="${SERVER:-redserver.local}"
+
+if nc -z -w 1 "$SERVER" 22 2>/dev/null; then
+    echo "● Server On"
+else
+    echo "○ Server DOWN!!"
+fi
