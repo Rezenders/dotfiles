@@ -1,0 +1,5 @@
+[/]
+focus-down=['<Control><Super>Down', '<Super>j']
+focus-left=['<Control><Super>Left', '<Super>h']
+focus-right=['<Control><Super>Right', '<Super>l']
+focus-up=['<Control><Super>Up', '<Super>k']
