@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 
-SERVER="${SERVER:-redserver.local}"
+SERVER="redserver.local"
+FALLBACK_IP="192.168.2.125"
+PORT=22
 
-if nc -z -w 1 "$SERVER" 22 2>/dev/null; then
+check_server() {
+    nc -z -w 2 "$1" "$PORT" 2>/dev/null
+}
+
+if check_server "$SERVER" || check_server "$FALLBACK_IP"; then
     echo "● Server On"
 else
     echo "○ Server DOWN!!"
 fi
+

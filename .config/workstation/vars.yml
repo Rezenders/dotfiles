@@ -65,6 +65,8 @@ desktop_packages:
   - thunderbird
 
 latex_packages:
+  - texlab
+  - chktex
   - texlive-full
   - latexmk
   - latexdiff
