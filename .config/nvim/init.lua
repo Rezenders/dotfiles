@@ -1209,12 +1209,8 @@ do
   })
 
   -- Keybindings
-  vim.keymap.set('n', '<leader>ac', '<cmd>ClaudeCode<CR>',
-    { desc = 'Toggle Claude Code' })
-
-  vim.keymap.set('n', '<leader>af', '<cmd>ClaudeCodeFocus<CR>',
-    { desc = 'Focus Claude Code' })
-
+  -- Claude runs in a kitty pane (`claude --ide`); provider 'none' cannot
+  -- toggle or focus it, so pane switching/zoom is handled by kitty.
   vim.keymap.set('n', '<leader>ab', '<cmd>ClaudeCodeAdd %<CR>',
     { desc = 'Add current buffer to Claude' })
 
