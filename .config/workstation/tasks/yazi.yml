@@ -1,0 +1,37 @@
+---
+- name: Install or update Yazi and recommended tools
+  become: true
+  ansible.builtin.apt:
+    name: "{{ yazi_packages }}"
+    state: "{{ package_state }}"
+  tags: packages
+
+- name: Create the user's Nerd Font directory
+  ansible.builtin.file:
+    path: "{{ workstation_home }}/.local/share/fonts/NerdFontsSymbolsOnly"
+    state: directory
+    mode: "0755"
+
+# Ubuntu 26.04 does not package Nerd Fonts. Install just the monospace symbols
+# fallback rather than replacing the user's preferred terminal font.
+- name: Install Nerd Font symbols and license
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/ryanoasis/nerd-fonts/v3.4.0/patched-fonts/NerdFontsSymbolsOnly/{{ item }}"
+    dest: "{{ workstation_home }}/.local/share/fonts/NerdFontsSymbolsOnly/{{ item }}"
+    mode: "0644"
+  loop:
+    - SymbolsNerdFontMono-Regular.ttf
+    - LICENSE
+  register: yazi_nerd_font
+  when: not ansible_check_mode
+
+- name: Refresh the user's font cache
+  ansible.builtin.command:
+    argv:
+      - fc-cache
+      - -f
+      - "{{ workstation_home }}/.local/share/fonts/NerdFontsSymbolsOnly"
+  when:
+    - yazi_nerd_font is changed
+    - not ansible_check_mode
+  changed_when: true

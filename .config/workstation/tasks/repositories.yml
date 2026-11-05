@@ -57,6 +57,9 @@
     - url: https://download.docker.com/linux/ubuntu/gpg
       dest: /etc/apt/keyrings/docker.asc
       enabled: "{{ install_docker }}"
+    - url: https://yazi-rs.github.io/builds/yazi-keyring.gpg
+      dest: /etc/apt/keyrings/yazi-keyring.gpg
+      enabled: true
     - url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
       dest: /etc/apt/keyrings/githubcli-archive-keyring.gpg
       enabled: true
@@ -94,6 +97,10 @@
         Architectures: amd64
         Signed-By: /etc/apt/keyrings/docker.asc
       enabled: "{{ install_docker }}"
+    - filename: yazi.list
+      content: |
+        deb [arch=amd64 signed-by=/etc/apt/keyrings/yazi-keyring.gpg] https://yazi-rs.github.io/builds/ stable main
+      enabled: true
     - filename: github-cli.list
       content: |
         deb [arch=amd64 signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main

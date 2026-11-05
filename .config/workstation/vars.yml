@@ -56,6 +56,21 @@ common_packages:
   - zathura-ps
   - zathura-djvu
 
+# Yazi's other recommended tools (fzf, fd-find, ripgrep) are in common_packages;
+# zoxide is installed by tasks/zoxide.yml when install_zoxide is enabled.
+yazi_packages:
+  - yazi
+  - file
+  - ffmpeg
+  - 7zip
+  - jq
+  - poppler-utils
+  - resvg
+  - imagemagick
+  - wl-clipboard
+  - xclip
+  - fontconfig
+
 desktop_packages:
   - kitty
   - gnome-shell-extension-manager

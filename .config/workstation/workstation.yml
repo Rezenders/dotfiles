@@ -38,6 +38,10 @@
       ansible.builtin.import_tasks: tasks/packages.yml
       tags: packages
 
+    - name: Install Yazi and recommended preview tools and fonts
+      ansible.builtin.import_tasks: tasks/yazi.yml
+      tags: [packages, yazi]
+
     - name: Install user applications
       ansible.builtin.import_tasks: tasks/applications.yml
       tags: applications

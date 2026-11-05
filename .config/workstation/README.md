@@ -6,6 +6,8 @@ Ansible configuration for personal **Ubuntu 26.04 amd64** computers.
 
 - Development tools: Git, Go, Neovim from the unstable PPA, fzf, fd-find,
   ripgrep, and Tree-sitter CLI installed with Cargo.
+- Yazi file manager from its official stable apt repository, with preview/search
+  tools, clipboard support, and Nerd Font symbols.
 - zoxide smart directory navigation, installed upstream with Bash integration.
 - tdf terminal PDF viewer, built from its upstream Git repository with Cargo.
 - Kitty terminal and common GNOME desktop applications.
@@ -125,7 +127,8 @@ when Node.js or npm is absent. Diffs can expose configuration; do not publish
 sensitive output.
 
 Task tags are `repositories`, `packages`, `applications`, `tree_sitter`, `zoxide`, `tdf`, `pi`,
-`docker`, and `services`. Docker requires its apt source to be configured first:
+`yazi`, `docker`, and `services`. Docker and Yazi require their apt sources to be
+configured first:
 
 ```bash
 ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
@@ -162,6 +165,35 @@ ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
 `--locked` uses the crate's lockfile but does not pin the CLI release. Existing
 installations are not automatically upgraded; rerun the Cargo install command
 manually to request an update.
+
+## Yazi file manager
+
+Yazi is installed from the [official stable apt repository](https://yazi-rs.github.io/docs/installation/#apt).
+The `yazi` tasks (also included in the `packages` tag) install `file`, FFmpeg,
+non-standalone `7zip`, `jq`, `poppler-utils`, `resvg`, ImageMagick, `wl-clipboard`
+for Wayland, and `xclip` for X11. Existing base packages provide `fzf`, `fd-find`,
+and `ripgrep`; the default-enabled `zoxide` tasks provide history navigation.
+Disabling `install_zoxide` also disables that optional Yazi integration.
+Ubuntu 26.04's fzf and ImageMagick satisfy upstream's minimum versions
+(0.53.0 and 7.1.1 respectively). Yazi supports Ubuntu's `fdfind` binary name.
+
+The tasks also install Nerd Fonts v3.4.0's **Symbols Nerd Font Mono** and its
+license under `~/.local/share/fonts/NerdFontsSymbolsOnly`, then refresh the user
+font cache when changed. This supplies fallback icons without changing the
+terminal's primary font. Restart the terminal after installation; if icons are
+still missing, configure its symbol fallback font. The font-cache command is
+skipped in check mode.
+
+To install the complete set on a fresh machine:
+
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \\
+  --ask-become-pass --tags repositories,packages,zoxide
+```
+
+Once repositories and base tools are configured, use `--tags yazi` to manage
+Yazi, its preview/clipboard tools, and the symbols font. Apt packages follow
+`package_state`; the font release is pinned in `tasks/yazi.yml`.
 
 ## zoxide
 
