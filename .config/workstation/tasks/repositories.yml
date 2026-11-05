@@ -6,7 +6,9 @@
   ansible.builtin.file:
     path: /etc/apt/sources.list.d/spotify.sources
     state: absent
-  when: install_personal_apps | bool
+  when:
+    - install_personal_apps | bool
+    - "'spotify-client' in (personal_apt_packages | default([]))"
 
 - name: Install repository prerequisites
   become: true
@@ -71,10 +73,10 @@
       enabled: true
     - url: https://downloads.claude.ai/claude-desktop/key.asc
       dest: /usr/share/keyrings/claude-desktop-archive-keyring.asc
-      enabled: "{{ install_personal_apps }}"
+      enabled: "{{ install_personal_apps | bool and ('claude-desktop' in (personal_apt_packages | default([]))) }}"
     - url: https://download.spotify.com/debian/pubkey_5384CE82BA52C83A.asc
       dest: /etc/apt/keyrings/spotify.asc
-      enabled: "{{ install_personal_apps }}"
+      enabled: "{{ install_personal_apps | bool and ('spotify-client' in (personal_apt_packages | default([]))) }}"
   when: item.enabled | bool
   loop_control:
     label: "{{ item.dest }}"
@@ -120,11 +122,11 @@
     - filename: claude-desktop.list
       content: |
         deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/claude-desktop-archive-keyring.asc] https://downloads.claude.ai/claude-desktop/apt/stable stable main
-      enabled: "{{ install_personal_apps }}"
+      enabled: "{{ install_personal_apps | bool and ('claude-desktop' in (personal_apt_packages | default([]))) }}"
     - filename: spotify.list
       content: |
         deb [signed-by=/etc/apt/keyrings/spotify.asc] https://repository.spotify.com stable non-free
-      enabled: "{{ install_personal_apps }}"
+      enabled: "{{ install_personal_apps | bool and ('spotify-client' in (personal_apt_packages | default([]))) }}"
   when: item.enabled | bool
   loop_control:
     label: "{{ item.filename }}"

@@ -80,7 +80,7 @@ else:
             "hosts": "localhost",
             "connection": "local",
             "gather_facts": False,
-            "vars_files": [str(ROOT / "vars.yml")],
+            "vars_files": [str(ROOT / "vars/common.yml"), str(ROOT / "vars/personal.yml")],
             "vars": {
                 "workstation_home": str(self.home),
                 "pi_node_executable": str(self.node),

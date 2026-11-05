@@ -1,25 +1,26 @@
 ---
-- name: Configure my personal Ubuntu workstation
+- name: Configure Ubuntu workstation
   hosts: localhost
   connection: local
   gather_facts: true
   become: false
 
   vars_files:
-    - vars.yml
+    - vars/common.yml
+    - "vars/{{ workstation_profile | default('personal') }}.yml"
 
   pre_tasks:
-    - name: Require a normal user on Ubuntu 26.04
+    - name: Require a normal user on Ubuntu 24.04 or 26.04
       ansible.builtin.assert:
         that:
           - ansible_facts["distribution"] == "Ubuntu"
-          - ansible_facts["distribution_version"] == "26.04"
+          - ansible_facts["distribution_version"] in ["24.04", "26.04"]
           - ansible_facts["user_id"] != "root"
           - ansible_facts["architecture"] == "x86_64"
           - package_state in ["present", "latest"]
-          - syncthing_channel in ["stable", "stable-v1", "stable-v2"]
+          - not (enable_syncthing | default(false) | bool) or syncthing_channel in ["stable", "stable-v1", "stable-v2"]
         fail_msg: >-
-          Run as your normal user on Ubuntu 26.04 amd64 (Spotify's apt package requires amd64).
+          Run as your normal user on Ubuntu 24.04 or 26.04 amd64 (Spotify's apt package requires amd64).
           Use --ask-become-pass, not sudo ansible-playbook.
       tags: always
 
@@ -64,6 +65,11 @@
       ansible.builtin.import_tasks: tasks/pi.yml
       when: install_pi | bool
       tags: pi
+
+    - name: Install Betterleaks and configure Git pre-commit hooks
+      ansible.builtin.import_tasks: tasks/betterleaks.yml
+      when: install_betterleaks | bool
+      tags: betterleaks
 
     - name: Install and configure Docker Engine
       ansible.builtin.import_tasks: tasks/docker.yml

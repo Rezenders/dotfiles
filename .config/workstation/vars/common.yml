@@ -1,30 +1,34 @@
 ---
-# Personal Ubuntu 26.04 machines. Override with -e or an extra vars file.
-# Use traditional sudo: sudo-rs can break Ansible's password-prompt detection.
-ansible_become_exe: /usr/bin/sudo.ws
-install_latex: true
+# Shared workstation variables for personal and work machines.
+# Machine-specific settings are in vars/personal.yml and vars/work.yml.
+
 install_personal_apps: true
-enable_syncthing: true
 install_tdf: true
 install_zoxide: true
 install_pi: true
 install_docker: true
+install_betterleaks: true
+
+# Pre-commit hook for the tide_cfg bare repository; enabled in vars/work.yml.
+enable_tide_cfg_hook: false
+tide_git_dir: "{{ workstation_home }}/.tide_cfg"
+tide_work_tree: "{{ workstation_home }}/rock_local_ws"
+
+betterleaks_version: "1.10.0"
+betterleaks_checksum: "sha256:9d9ad503cd5d80d18a939352266c3fcca52f10da9b83cd5cfe646989b13940fe"
+
 # Docker group membership is root-equivalent; opt in explicitly.
 docker_add_user_to_group: false
+
 # npm tools are installed only when missing, unless updates are requested.
 update_pi: false
 update_pi_extensions: false
+
 # Absolute paths keep Ansible independent of interactive shell/NVM setup.
 pi_node_executable: /usr/bin/node
 pi_npm_executable: /usr/bin/npm
 pi_npm_package: "@earendil-works/pi-coding-agent"
 ast_grep_npm_package: "@ast-grep/cli"
-pi_packages:
-  - git:github.com/code-yeongyu/pi-ast-grep
-  - npm:pi-web-access
-  - git:github.com/samfoy/pi-lsp-extension
-  - npm:pi-subagents
-  - npm:pi-nvim
 
 docker_packages:
   - docker-ce
@@ -32,10 +36,13 @@ docker_packages:
   - containerd.io
   - docker-buildx-plugin
   - docker-compose-plugin
+
 # "latest" upgrades only the packages managed here; it is not a full OS upgrade.
 package_state: latest
-# Match this machine's existing upstream Syncthing v2 channel.
+
+# Match machine's existing upstream Syncthing v2 channel.
 syncthing_channel: stable-v2
+
 # Opt in to rerunning the vendor installers to request an update.
 update_vendor_apps: false
 
@@ -58,6 +65,7 @@ common_packages:
 
 # Yazi's other recommended tools (fzf, fd-find, ripgrep) are in common_packages;
 # zoxide is installed by tasks/zoxide.yml when install_zoxide is enabled.
+# resvg is skipped on 24.04/Noble because it is not available in upstream apt.
 yazi_packages:
   - yazi
   - file
@@ -65,20 +73,10 @@ yazi_packages:
   - 7zip
   - jq
   - poppler-utils
-  - resvg
   - imagemagick
   - wl-clipboard
   - xclip
   - fontconfig
-
-desktop_packages:
-  - kitty
-  - gnome-shell-extension-manager
-  - gnome-browser-connector
-  - gnome-clocks
-  - gnome-tweaks
-  - input-remapper
-  - thunderbird
 
 latex_packages:
   - texlab
@@ -90,15 +88,3 @@ latex_packages:
   - texlive-latex-recommended
   - texlive-latex-extra
   - texlive-extra-utils
-
-vendor_installers:
-  - name: Zed
-    url: https://zed.dev/install.sh
-    script: zed-install.sh
-    interpreter: /bin/sh
-    executable: "{{ workstation_home }}/.local/bin/zed"
-  - name: Claude CLI
-    url: https://claude.ai/install.sh
-    script: claude-install.sh
-    interpreter: /bin/bash
-    executable: "{{ workstation_home }}/.local/bin/claude"

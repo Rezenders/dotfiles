@@ -1,6 +1,6 @@
-# Personal Ubuntu workstation
+# Ubuntu workstation
 
-Ansible configuration for personal **Ubuntu 26.04 amd64** computers.
+Ansible configuration for personal and work **Ubuntu (24.04 and 26.04 amd64)** computers.
 
 ## Features
 
@@ -36,7 +36,7 @@ ROS, Bun, and hardware-specific tools are outside the scope of this configuratio
 
 ## Requirements
 
-- Ubuntu 26.04 on amd64.
+- Ubuntu 24.04 or 26.04 on amd64.
 - A normal user with sudo access.
 - Internet access to Ubuntu and vendor repositories, npm, and GitHub.
 - Sufficient disk space for TeX Live, Docker, and their dependencies.
@@ -75,7 +75,19 @@ untracked home files from status; explicit `config add PATH` still works.
 
 ## Configure
 
-Edit `vars.yml` or supply Ansible extra variables.
+Configuration is split across `vars/common.yml` and profile-specific files in `vars/`:
+- `vars/personal.yml`: Default profile for personal Ubuntu 26.04 machines (includes LaTeX, Syncthing, GNOME desktop packages, Claude, Spotify, and Zed).
+- `vars/work.yml`: Profile for work Kubuntu 24.04 machines (omits LaTeX, Syncthing, GNOME packages, and Thunderbird; includes Spotify, Zed, and the local `pi-nvim` fork).
+
+Select a profile with `-e workstation_profile=<profile>`:
+
+```bash
+# Personal profile (default)
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --ask-become-pass
+
+# Work profile
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --ask-become-pass -e workstation_profile=work
+```
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
@@ -85,6 +97,8 @@ Edit `vars.yml` or supply Ansible extra variables.
 | `install_zoxide` | `true` | Install zoxide and initialize it in Bash |
 | `install_tdf` | `true` | Build and install the tdf terminal PDF viewer with Cargo |
 | `install_pi` | `true` | Install Node.js, npm, Pi, ast-grep, and Pi extensions |
+| `install_betterleaks` | `true` | Install Betterleaks secret scanner CLI |
+| `enable_tide_cfg_hook` | `false` | Install Betterleaks pre-commit hook in `~/.tide_cfg` (enabled in `work` profile) |
 | `install_docker` | `true` | Install Docker CE and enable its system service |
 | `docker_add_user_to_group` | `false` | Grant the invoking user root-equivalent Docker access |
 | `package_state` | `latest` | Upgrade managed apt packages; use `present` for missing packages only |
@@ -127,7 +141,7 @@ when Node.js or npm is absent. Diffs can expose configuration; do not publish
 sensitive output.
 
 Task tags are `repositories`, `packages`, `applications`, `tree_sitter`, `zoxide`, `tdf`, `pi`,
-`yazi`, `docker`, and `services`. Docker and Yazi require their apt sources to be
+`betterleaks`, `yazi`, `docker`, and `services`. Docker and Yazi require their apt sources to be
 configured first:
 
 ```bash
@@ -140,11 +154,10 @@ ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
 
 ## Tree-sitter CLI
 
-The `tree_sitter` tasks install Ubuntu's Cargo and native build tools, then run
-`cargo install --locked tree-sitter-cli` as the normal user. The CLI is installed
-under `~/.cargo/bin` and skipped if `~/.cargo/bin/tree-sitter` already exists.
-An existing Cargo installation in `~/.cargo/bin` takes precedence over system Cargo.
-The Cargo installation step is skipped in check mode.
+The `tree_sitter` tasks install native build tools and rustup (if missing),
+then run `cargo +stable install --locked tree-sitter-cli` as the normal user.
+The CLI is installed under `~/.cargo/bin` and skipped if `~/.cargo/bin/tree-sitter`
+already exists. The Cargo installation step is skipped in check mode.
 
 The playbook adds this line to `~/.profile` for future login shells. To use the CLI
 in your current shell immediately, also run:
@@ -274,6 +287,79 @@ explicit update. Defaults are unpinned.
 Pi authentication is configured separately through `/login` or provider API keys.
 Language servers used by the LSP extension must be installed separately.
 No credentials or session data are managed by this playbook.
+
+## Betterleaks and Git pre-commit hook
+
+Betterleaks is a secret scanner that prevents credentials, tokens, and private
+keys from being committed into Git repositories.
+
+The playbook installs the standalone `betterleaks` binary into `~/.local/bin`
+from official GitHub releases, verified by SHA-256 checksum.
+
+When running under the `work` persona (`enable_tide_cfg_hook=true`), the playbook
+installs a dedicated Git pre-commit hook in the bare configuration repository at
+`~/.tide_cfg/hooks/pre-commit`. Other Git repositories and existing hooks are
+unaffected.
+
+### How the hook works
+
+Before each commit initiated via `tw-ws-config commit`, Git invokes
+`~/.tide_cfg/hooks/pre-commit`, which executes:
+
+```bash
+betterleaks git --pre-commit --staged --redact -v
+```
+
+- **Scope**: Scans only staged changes (including added and modified files).
+- **Security**: The `--redact` flag obscures detected secrets in terminal output
+  while reporting the rule name, file path, and line numbers.
+- **Enforcement**: If secrets are detected, Betterleaks exits with code `1` and
+  aborts the commit. If no secrets are found, it exits with `0` and allows the commit.
+- **Location-independent**: Works regardless of the directory from which `tw-ws-config commit` is invoked.
+
+### Manual scanning
+
+You can run Betterleaks manually at any time:
+
+```bash
+# Scan staged changes in the rock_local_ws working tree
+betterleaks git --pre-commit --staged --redact -v
+
+# Scan an entire directory or working tree
+betterleaks dir ~/rock_local_ws -v --redact
+
+# Scan arbitrary input from stdin
+cat file.txt | betterleaks stdin -v --redact
+```
+
+### Handling false positives
+
+If Betterleaks flags a false positive:
+1. **Inline comment**: Append `# betterleaks:allow` or `# gitleaks:allow` to the
+   offending line in code or configuration files.
+2. **Ignore file**: Add `.betterleaksignore` in the working tree with the finding's
+   rule ID or file path.
+
+### Bypassing the hook
+
+In emergency situations where a commit must proceed despite a detection:
+
+```bash
+tw-ws-config commit --no-verify -m "commit message"
+```
+
+### Updates and reproduction via Ansible
+
+To install or update Betterleaks and deploy the hook:
+
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --tags betterleaks -e workstation_profile=work
+```
+
+To upgrade to a newer Betterleaks version, update `betterleaks_version` and
+`betterleaks_checksum` in `vars/common.yml`, then re-run the playbook.
+
 
 ## Docker
 

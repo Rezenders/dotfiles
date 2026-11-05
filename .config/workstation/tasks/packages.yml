@@ -22,11 +22,11 @@
 - name: Install or update personal apt applications
   become: true
   ansible.builtin.apt:
-    name:
-      - spotify-client
-      - claude-desktop
+    name: "{{ personal_apt_packages }}"
     state: "{{ package_state }}"
-  when: install_personal_apps | bool
+  when:
+    - install_personal_apps | bool
+    - (personal_apt_packages | default([])) | length > 0
 
 # Install the replacement successfully BEFORE removing the Snap.
 - name: Install or update Firefox from Mozilla

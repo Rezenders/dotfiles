@@ -10,8 +10,8 @@ fi
 # Provided by the target Ubuntu system, not part of this repository.
 # shellcheck disable=SC1091
 source /etc/os-release
-if [[ "${ID:-}" != ubuntu || "${VERSION_ID:-}" != 26.04 ]]; then
-    printf 'This bootstrap currently supports Ubuntu 26.04 only.\n' >&2
+if [[ "${ID:-}" != ubuntu || ( "${VERSION_ID:-}" != "26.04" && "${VERSION_ID:-}" != "24.04" ) ]]; then
+    printf 'This bootstrap currently supports Ubuntu 24.04 and 26.04 only.\n' >&2
     exit 1
 fi
 

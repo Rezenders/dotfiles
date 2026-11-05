@@ -1,0 +1,109 @@
+---
+- name: Check whether Betterleaks is installed
+  ansible.builtin.stat:
+    path: "{{ workstation_home }}/.local/bin/betterleaks"
+  register: betterleaks_binary
+
+- name: Check Betterleaks version if installed
+  ansible.builtin.command:
+    argv:
+      - "{{ workstation_home }}/.local/bin/betterleaks"
+      - version
+  register: betterleaks_current_version
+  when: betterleaks_binary.stat.exists
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Download and install Betterleaks as the normal user
+  when:
+    - not betterleaks_binary.stat.exists or (betterleaks_current_version.stdout | default('') | trim != betterleaks_version)
+    - not ansible_check_mode
+  block:
+    - name: Create user-owned installer and bin directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ workstation_home }}/.cache/workstation/installers"
+        - "{{ workstation_home }}/.local/bin"
+
+    - name: Download Betterleaks archive
+      ansible.builtin.get_url:
+        url: "https://github.com/betterleaks/betterleaks/releases/download/v{{ betterleaks_version }}/betterleaks_{{ betterleaks_version }}_linux_x64.tar.gz"
+        dest: "{{ workstation_home }}/.cache/workstation/installers/betterleaks_{{ betterleaks_version }}_linux_x64.tar.gz"
+        checksum: "{{ betterleaks_checksum }}"
+        mode: "0600"
+
+    - name: Extract Betterleaks binary to ~/.local/bin
+      ansible.builtin.unarchive:
+        src: "{{ workstation_home }}/.cache/workstation/installers/betterleaks_{{ betterleaks_version }}_linux_x64.tar.gz"
+        dest: "{{ workstation_home }}/.local/bin"
+        include:
+          - betterleaks
+        mode: "0755"
+        remote_src: true
+
+- name: Configure Betterleaks pre-commit hook for tide_cfg
+  when:
+    - enable_tide_cfg_hook | default(false) | bool
+  block:
+    - name: Check whether tide_cfg repository exists
+      ansible.builtin.stat:
+        path: "{{ tide_git_dir }}"
+      register: tide_cfg_dir
+
+    - name: Ensure tide_cfg hooks directory exists
+      ansible.builtin.file:
+        path: "{{ tide_git_dir }}/hooks"
+        state: directory
+        mode: "0755"
+      when: tide_cfg_dir.stat.exists
+
+    - name: Check for existing pre-commit hook in tide_cfg
+      ansible.builtin.stat:
+        path: "{{ tide_git_dir }}/hooks/pre-commit"
+      register: tide_cfg_hook_stat
+      when: tide_cfg_dir.stat.exists
+
+    - name: Read existing pre-commit hook if present
+      ansible.builtin.slurp:
+        src: "{{ tide_git_dir }}/hooks/pre-commit"
+      register: tide_cfg_existing_hook
+      when:
+        - tide_cfg_dir.stat.exists
+        - tide_cfg_hook_stat.stat.exists
+
+    - name: Verify existing pre-commit hook is not unmanaged
+      ansible.builtin.assert:
+        that:
+          - "'betterleaks' in (tide_cfg_existing_hook.content | b64decode)"
+        fail_msg: >-
+          An unmanaged pre-commit hook exists at {{ tide_git_dir }}/hooks/pre-commit.
+          To prevent losing existing hook functionality, inspect and merge it manually.
+      when:
+        - tide_cfg_dir.stat.exists
+        - tide_cfg_hook_stat.stat.exists
+
+    - name: Install Betterleaks pre-commit hook in tide_cfg
+      ansible.builtin.copy:
+        dest: "{{ tide_git_dir }}/hooks/pre-commit"
+        mode: "0755"
+        content: |
+          #!/bin/sh
+          # Managed by Ansible (~/.config/workstation)
+          set -e
+
+          if command -v betterleaks >/dev/null 2>&1; then
+              BETTERLEAKS="betterleaks"
+          elif [ -x "$HOME/.local/bin/betterleaks" ]; then
+              BETTERLEAKS="$HOME/.local/bin/betterleaks"
+          else
+              echo "Error: betterleaks is not installed or not in PATH / \$HOME/.local/bin" >&2
+              echo "Run Ansible to install Betterleaks: ansible-playbook ~/.config/workstation/workstation.yml" >&2
+              exit 1
+          fi
+
+          exec "$BETTERLEAKS" git --pre-commit --staged --redact -v
+      when: tide_cfg_dir.stat.exists

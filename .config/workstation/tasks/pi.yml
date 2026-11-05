@@ -1,8 +1,14 @@
 ---
+- name: Check whether npm executable is already present
+  ansible.builtin.stat:
+    path: "{{ pi_npm_executable }}"
+  register: pi_npm_exists
+  tags: packages
+
 - name: Install Node.js, npm and ripgrep for Pi
   become: true
   ansible.builtin.apt:
-    name: [nodejs, npm, ripgrep]
+    name: "{{ ['nodejs', 'ripgrep'] + ([] if (ansible_facts['distribution_version'] == '24.04' or pi_npm_exists.stat.exists) else ['npm']) }}"
     state: "{{ package_state }}"
     update_cache: true
     cache_valid_time: 3600
@@ -99,6 +105,14 @@
           {{ (pi_settings.content | b64decode | from_json).get('packages', [])
              if pi_settings.content is defined else [] }}
       no_log: true
+
+    - name: Clone pi-nvim fork if missing
+      ansible.builtin.command:
+        argv: [git, clone, "https://github.com/Rezenders/pi-nvim.git", "{{ workstation_home }}/git/pi-nvim"]
+        creates: "{{ workstation_home }}/git/pi-nvim"
+      when:
+        - "'../../git/pi-nvim' in pi_packages"
+        - not ansible_check_mode
 
     - name: Install missing Pi extension declarations
       ansible.builtin.command:

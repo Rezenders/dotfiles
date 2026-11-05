@@ -1,22 +1,75 @@
 ---
-- name: Install Cargo and native build tools for Tree-sitter CLI
+- name: Install native build tools for Tree-sitter CLI
   become: true
   ansible.builtin.apt:
-    name: [cargo, build-essential]
+    name: [curl, ca-certificates, build-essential]
     state: "{{ package_state }}"
     update_cache: true
     cache_valid_time: 3600
   tags: packages
 
-- name: Install Tree-sitter CLI as the normal user
-  ansible.builtin.command:
-    argv: [cargo, install, --locked, tree-sitter-cli]
-    creates: "{{ workstation_home }}/.cargo/bin/tree-sitter"
+- name: Check whether Tree-sitter CLI is installed
+  ansible.builtin.stat:
+    path: "{{ workstation_home }}/.cargo/bin/tree-sitter"
+  register: tree_sitter_binary
+
+- name: Build missing Tree-sitter CLI with a current Rust toolchain
+  when:
+    - not tree_sitter_binary.stat.exists
+    - not ansible_check_mode
   environment:
     HOME: "{{ workstation_home }}"
     CARGO_HOME: "{{ workstation_home }}/.cargo"
+    RUSTUP_HOME: "{{ workstation_home }}/.rustup"
     PATH: "{{ workstation_home }}/.cargo/bin:/usr/bin:/bin:{{ ansible_env.PATH }}"
-  when: not ansible_check_mode
+  block:
+    - name: Check for the user's rustup installation
+      ansible.builtin.stat:
+        path: "{{ workstation_home }}/.cargo/bin/rustup"
+      register: tree_sitter_rustup
+
+    - name: Create a user-owned installer cache
+      ansible.builtin.file:
+        path: "{{ workstation_home }}/.cache/workstation/installers"
+        state: directory
+        mode: "0700"
+      when: not tree_sitter_rustup.stat.exists
+
+    - name: Download rustup installer
+      ansible.builtin.get_url:
+        url: https://sh.rustup.rs
+        dest: "{{ workstation_home }}/.cache/workstation/installers/rustup-init.sh"
+        mode: "0600"
+      when: not tree_sitter_rustup.stat.exists
+
+    - name: Install rustup as the normal user
+      ansible.builtin.command:
+        argv:
+          - /bin/sh
+          - "{{ workstation_home }}/.cache/workstation/installers/rustup-init.sh"
+          - -y
+          - --profile
+          - minimal
+          - --default-toolchain
+          - stable
+          - --no-modify-path
+        creates: "{{ workstation_home }}/.cargo/bin/rustup"
+      when: not tree_sitter_rustup.stat.exists
+
+    - name: Ensure the latest stable Rust toolchain is available for Tree-sitter
+      ansible.builtin.command:
+        argv: ["{{ workstation_home }}/.cargo/bin/rustup", update, stable, --no-self-update]
+      changed_when: true
+
+    - name: Install Tree-sitter CLI as the normal user using stable Rust
+      ansible.builtin.command:
+        argv:
+          - "{{ workstation_home }}/.cargo/bin/cargo"
+          - +stable
+          - install
+          - --locked
+          - tree-sitter-cli
+        creates: "{{ workstation_home }}/.cargo/bin/tree-sitter"
 
 - name: Include Cargo-installed tools in the login shell PATH
   ansible.builtin.lineinfile:

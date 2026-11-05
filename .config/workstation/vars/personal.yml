@@ -1,0 +1,41 @@
+---
+# Personal workstation configuration (Ubuntu 26.04)
+
+# Use traditional sudo: sudo-rs can break Ansible's password-prompt detection.
+ansible_become_exe: /usr/bin/sudo.ws
+
+install_latex: true
+enable_syncthing: true
+enable_tide_cfg_hook: false
+
+desktop_packages:
+  - kitty
+  - gnome-shell-extension-manager
+  - gnome-browser-connector
+  - gnome-clocks
+  - gnome-tweaks
+  - input-remapper
+  - thunderbird
+
+personal_apt_packages:
+  - spotify-client
+  - claude-desktop
+
+vendor_installers:
+  - name: Zed
+    url: https://zed.dev/install.sh
+    script: zed-install.sh
+    interpreter: /bin/sh
+    executable: "{{ workstation_home }}/.local/bin/zed"
+  - name: Claude CLI
+    url: https://claude.ai/install.sh
+    script: claude-install.sh
+    interpreter: /bin/bash
+    executable: "{{ workstation_home }}/.local/bin/claude"
+
+pi_packages:
+  - git:github.com/code-yeongyu/pi-ast-grep
+  - npm:pi-web-access
+  - git:github.com/samfoy/pi-lsp-extension
+  - npm:pi-subagents
+  - npm:pi-nvim
