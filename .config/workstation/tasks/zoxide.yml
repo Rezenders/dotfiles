@@ -1,0 +1,50 @@
+---
+- name: Install download dependencies for zoxide
+  become: true
+  ansible.builtin.apt:
+    name: [curl, ca-certificates]
+    state: "{{ package_state }}"
+    update_cache: true
+    cache_valid_time: 3600
+  tags: packages
+
+- name: Check whether zoxide is installed
+  ansible.builtin.stat:
+    path: "{{ workstation_home }}/.local/bin/zoxide"
+  register: zoxide_binary
+
+- name: Install missing zoxide as the normal user
+  when:
+    - not zoxide_binary.stat.exists
+    - not ansible_check_mode
+  environment:
+    HOME: "{{ workstation_home }}"
+  block:
+    - name: Create a user-owned installer cache
+      ansible.builtin.file:
+        path: "{{ workstation_home }}/.cache/workstation/installers"
+        state: directory
+        mode: "0700"
+
+    - name: Download zoxide installer
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh
+        dest: "{{ workstation_home }}/.cache/workstation/installers/zoxide-install.sh"
+        mode: "0600"
+
+    - name: Run zoxide installer
+      ansible.builtin.command:
+        argv:
+          - /bin/sh
+          - "{{ workstation_home }}/.cache/workstation/installers/zoxide-install.sh"
+        creates: "{{ workstation_home }}/.local/bin/zoxide"
+
+- name: Initialize zoxide in Bash
+  ansible.builtin.blockinfile:
+    path: "{{ workstation_home }}/.bashrc"
+    marker: "# {mark} workstation zoxide"
+    block: |
+      export PATH="$HOME/.local/bin:$PATH"
+      eval "$(zoxide init bash)"
+    create: true
+    mode: "0644"

@@ -6,6 +6,7 @@ Ansible configuration for personal **Ubuntu 26.04 amd64** computers.
 
 - Development tools: Git, Go, Neovim from the unstable PPA, fzf, fd-find,
   ripgrep, and Tree-sitter CLI installed with Cargo.
+- zoxide smart directory navigation, installed upstream with Bash integration.
 - tdf terminal PDF viewer, built from its upstream Git repository with Cargo.
 - Kitty terminal and common GNOME desktop applications.
 - Pi coding agent, ast-grep CLI, and five Pi extension packages:
@@ -79,6 +80,7 @@ Edit `vars.yml` or supply Ansible extra variables.
 | `install_latex` | `true` | Install the TeX Live package set |
 | `install_personal_apps` | `true` | Install Spotify, Claude Desktop, Zed, and Claude CLI |
 | `enable_syncthing` | `true` | Install Syncthing and enable its service |
+| `install_zoxide` | `true` | Install zoxide and initialize it in Bash |
 | `install_tdf` | `true` | Build and install the tdf terminal PDF viewer with Cargo |
 | `install_pi` | `true` | Install Node.js, npm, Pi, ast-grep, and Pi extensions |
 | `install_docker` | `true` | Install Docker CE and enable its system service |
@@ -122,7 +124,7 @@ commands, vendor installers, and service changes are skipped. Pi setup is deferr
 when Node.js or npm is absent. Diffs can expose configuration; do not publish
 sensitive output.
 
-Task tags are `repositories`, `packages`, `applications`, `tree_sitter`, `tdf`, `pi`,
+Task tags are `repositories`, `packages`, `applications`, `tree_sitter`, `zoxide`, `tdf`, `pi`,
 `docker`, and `services`. Docker requires its apt source to be configured first:
 
 ```bash
@@ -160,6 +162,24 @@ ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
 `--locked` uses the crate's lockfile but does not pin the CLI release. Existing
 installations are not automatically upgraded; rerun the Cargo install command
 manually to request an update.
+
+## zoxide
+
+The `zoxide` tasks download the upstream installer from
+`https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh` and run it
+with `sh` as the normal user. The script is cached under
+`~/.cache/workstation/installers`. Installation is skipped when
+`~/.local/bin/zoxide` already exists, and in check mode. The installer is unpinned
+and executes third-party code.
+
+A managed block in `~/.bashrc` adds `~/.local/bin` to PATH before running
+`eval "$(zoxide init bash)"`. Open a new Bash session after applying, or run
+`source ~/.bashrc` in your current Bash session.
+
+```bash
+ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
+  --ask-become-pass --tags zoxide
+```
 
 ## tdf terminal PDF viewer
 

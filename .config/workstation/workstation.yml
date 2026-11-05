@@ -46,6 +46,11 @@
       ansible.builtin.import_tasks: tasks/tree_sitter.yml
       tags: tree_sitter
 
+    - name: Install zoxide and initialize Bash integration
+      ansible.builtin.import_tasks: tasks/zoxide.yml
+      when: install_zoxide | bool
+      tags: zoxide
+
     - name: Install tdf terminal PDF viewer
       ansible.builtin.import_tasks: tasks/tdf.yml
       when: install_tdf | bool
