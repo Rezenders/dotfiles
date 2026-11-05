@@ -1124,7 +1124,33 @@ do
   -- Identify docks by application and owning Neovim window.
   local dock_helper = vim.fn.stdpath('config') .. '/kitty/dock_toggle.py'
   local dock_busy = {}
-  local function kitty_dock(kind, edge, size, launch_env)
+
+  local function make_dock_launcher(cmd)
+    local owner = vim.env.KITTY_WINDOW_ID or tostring(vim.fn.getpid())
+    local script_path = string.format('/tmp/nvim-dock-%s-%s.sh', owner, cmd)
+    local f = io.open(script_path, 'w')
+    if not f then
+      return cmd
+    end
+
+    f:write('#!/bin/sh\n')
+    for k, v in pairs(vim.fn.environ()) do
+      if k ~= '_' and k ~= 'KITTY_WINDOW_ID' and k:match('^[%a_][%w_]*$') then
+        f:write(string.format("export %s='%s'\n", k, v:gsub("'", "'\\''")))
+      end
+    end
+    local exe = vim.fn.exepath(cmd)
+    if exe == '' then
+      exe = cmd
+    end
+    f:write(string.format('exec %s "$@"\n', exe))
+    f:close()
+
+    vim.fn.setfperm(script_path, 'rwx------')
+    return script_path
+  end
+
+  local function kitty_dock(kind, edge, size, launch_env, cmd)
     local owner = vim.env.KITTY_WINDOW_ID
     if not owner then
       vim.notify('Neovim must be running inside Kitty', vim.log.levels.ERROR)
@@ -1191,7 +1217,12 @@ do
       for key, value in pairs(env) do
         args[#args + 1] = '--env=' .. key .. '=' .. value
       end
-      args[#args + 1] = kind
+      local launch_cmd = type(cmd) == 'function' and cmd() or (cmd or kind)
+      if type(launch_cmd) == 'table' then
+        vim.list_extend(args, launch_cmd)
+      else
+        args[#args + 1] = launch_cmd
+      end
       run(args, done)
     end)
   end
@@ -1226,6 +1257,8 @@ do
   vim.keymap.set('n', '<leader>tp', function()
     kitty_dock('pi', 'right', '25%', function()
       return {}
+    end, function()
+      return make_dock_launcher('pi')
     end)
   end, { desc = 'Toggle Pi dock (keep running)' })
 end
@@ -1297,12 +1330,25 @@ do
   local pi = require("pi-nvim")
   vim.keymap.set("x", "<leader>ps", pi.append_selection,
     { desc = "Add selection to Pi draft (no submit)" })
+  vim.keymap.set("x", "<leader>pa", pi.append_selection_prompt,
+    { desc = "Add selection with message to Pi draft (no submit)" })
   vim.keymap.set("n", "<leader>pf", pi.append_file,
     { desc = "Add file reference to Pi draft" })
   vim.keymap.set("n", "<leader>pb", pi.append_buffer,
     { desc = "Add buffer to Pi draft (no submit)" })
+
   vim.keymap.set("n", "<leader>pi", "<cmd>PiPing<CR>",
     { desc = "Ping Pi session" })
+
+  vim.keymap.set("n", "<leader>pp", ":PiSend<CR>",
+   { desc = "Send prompt to Pi & submit" })
+
+  vim.keymap.set("n", "<leader>pF", ":PiSendFile<CR>",
+   { desc = "Send file to Pi & submit" })
+  vim.keymap.set("v", "<leader>pS", ":PiSendSelection<CR>",
+   { desc = "Send selection to Pi & submit" })
+  vim.keymap.set("n", "<leader>pB", ":PiSendBuffer<CR>",
+   { desc = "Send buffer to Pi & submit" })
 end
 -- ============================================================
 -- Claude Code integration
@@ -1323,6 +1369,7 @@ do
   -- Keybindings
   -- Claude runs in a kitty pane (`claude --ide`); provider 'none' cannot
   -- toggle or focus it, so pane switching/zoom is handled by kitty.
+  -- Pi runs in a kitty dock pane via make_dock_launcher inheriting Neovim's environment.
   vim.keymap.set('n', '<leader>ab', '<cmd>ClaudeCodeAdd %<CR>',
     { desc = 'Add current buffer to Claude' })
 
