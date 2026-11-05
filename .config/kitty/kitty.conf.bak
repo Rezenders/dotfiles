@@ -20,7 +20,7 @@
 #: <https://sw.kovidgoyal.net/kitty/kittens/choose-fonts/#font-spec-
 #: syntax>.
 
-font_size 14.0
+#font_size 14.0
 
 #: Font size (in pts).
 
@@ -397,7 +397,7 @@ font_size 14.0
 
 #: Scrollback {{{
 
-# scrollback_lines 2000
+# scrollback_lines 5000
 
 #: Number of lines of history to keep in memory for scrolling back.
 #: Memory is allocated on demand. Negative numbers are (effectively)
@@ -3509,7 +3509,7 @@ font_size 14.0
 
 
 # BEGIN_KITTY_THEME
-# One Half Light
+# Solarized Light
 include current-theme.conf
 # END_KITTY_THEME
 #
@@ -3527,6 +3527,18 @@ map alt+right neighboring_window right
 map alt+up    neighboring_window up
 map alt+down  neighboring_window down
 
+# Navigation between Kitty panes
+map ctrl+h neighboring_window left
+map ctrl+j neighboring_window bottom
+map ctrl+k neighboring_window top
+map ctrl+l neighboring_window right
+
+# Forward navigation shortcuts to Neovim when focused
+map --when-focus-on var:IS_NVIM ctrl+h
+map --when-focus-on var:IS_NVIM ctrl+j
+map --when-focus-on var:IS_NVIM ctrl+k
+map --when-focus-on var:IS_NVIM ctrl+l
+
 # Close current pane
 map ctrl+shift+d close_window
 
@@ -3539,10 +3551,32 @@ window_padding_width 5
 
 tab_bar_style powerline 
 
-
 # BEGIN_KITTY_FONTS
-font_family      family="SauceCodePro Nerd Font Mono"
+font_family      family="Hack Nerd Font Mono"
 bold_font        auto
 italic_font      auto
 bold_italic_font auto
+font_size 14.0
 # END_KITTY_FONTS
+
+enable_audio_bell no
+
+# cursor #000000
+# cursor_text_color #000000
+cursor_shape underline
+cursor_trail 0
+
+# Use kitty-scrollback.nvim for searchable scrollback and command output.
+# Keep the pager as a fallback for actions that explicitly use show_scrollback.
+scrollback_pager nvim --cmd 'set eventignore=FileType' +'nnoremap q ZQ' +'call nvim_open_term(0, {})' +'set nomodified nolist' +'$' -
+shell_integration enabled
+action_alias kitty_scrollback_nvim kitten /home/gus/.local/share/nvim/site/pack/core/opt/kitty-scrollback.nvim/python/kitty_scrollback_nvim.py
+map kitty_mod+h kitty_scrollback_nvim
+map kitty_mod+g kitty_scrollback_nvim --config ksb_builtin_last_cmd_output
+mouse_map ctrl+shift+right press ungrabbed combine : mouse_select_command_output : kitty_scrollback_nvim --config ksb_builtin_last_visited_cmd_output
+scrollback_lines 5000
+mouse_hide_wait -3.0
+
+notify_on_cmd_finish invisible 30
+allow_remote_control yes
+listen_on unix:/tmp/mykitty
