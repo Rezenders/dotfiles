@@ -1038,50 +1038,6 @@ do
   -- require 'custom.plugins.git'
 end
 
--- -- ============================================================
--- -- Yazi integration
--- -- ============================================================
--- do
---   vim.pack.add {
---     gh 'mikavilpas/yazi.nvim',
---   }
---
---   require('yazi').setup {
---     open_for_directories = false,
---
---     integrations = {
---       -- Search within the current Yazi directory using fzf-lua
---       grep_in_directory = function(directory)
---         require('fzf-lua').live_grep {
---           cwd = directory,
---         }
---       end,
---
---       -- Search only files selected in Yazi
---       grep_in_selected_files = function(selected_files)
---         require('fzf-lua').live_grep {
---           search_paths = selected_files,
---         }
---       end,
---     },
---   }
---
---   -- Open Yazi at the current file
---   vim.keymap.set({ 'n', 'v' }, '<leader>-', '<cmd>Yazi<CR>', {
---     desc = 'Open Yazi at current file',
---   })
---
---   -- Open Yazi in Neovim's working directory
---   vim.keymap.set('n', '<leader>fy', '<cmd>Yazi cwd<CR>', {
---     desc = 'Open Yazi in working directory',
---   })
---
---   -- Resume the previous Yazi session
---   vim.keymap.set('n', '<leader>yt', '<cmd>Yazi toggle<CR>', {
---     desc = 'Toggle Yazi',
---   })
--- end
-
 -- Section 11: kitty integration
 do
   -- [[ Scrollback browsing ]]
@@ -1142,10 +1098,10 @@ do
   vim.keymap.set('n', '<C-l>', splits.move_cursor_right)
 
   -- Resizing
-  vim.keymap.set('n', '<M-h>', splits.resize_left)
-  vim.keymap.set('n', '<M-j>', splits.resize_down)
-  vim.keymap.set('n', '<M-k>', splits.resize_up)
-  vim.keymap.set('n', '<M-l>', splits.resize_right)
+  vim.keymap.set('n', '<A-h>', splits.resize_left)
+  vim.keymap.set('n', '<A-j>', splits.resize_down)
+  vim.keymap.set('n', '<A-k>', splits.resize_up)
+  vim.keymap.set('n', '<A-l>', splits.resize_right)
 
   local function kitty_split(direction)
     vim.fn.jobstart({
@@ -1165,27 +1121,113 @@ do
     kitty_split('hsplit')
   end, { desc = 'Kitty horizontal split' })
 
-  vim.keymap.set('n', '<leader>ty', function()
-  local server = vim.v.servername
-  local kitty_window = vim.env.KITTY_WINDOW_ID
+  -- Identify docks by application and owning Neovim window.
+  local dock_helper = vim.fn.stdpath('config') .. '/kitty/dock_toggle.py'
+  local dock_busy = {}
+  local function kitty_dock(kind, edge, size, launch_env)
+    local owner = vim.env.KITTY_WINDOW_ID
+    if not owner then
+      vim.notify('Neovim must be running inside Kitty', vim.log.levels.ERROR)
+      return
+    end
+    if dock_busy[kind] then
+      return
+    end
+    dock_busy[kind] = true
+    local function done()
+      dock_busy[kind] = nil
+    end
+    local function run(args, callback)
+      vim.system(vim.list_extend({ 'kitten', '@' }, args), { text = true }, vim.schedule_wrap(function(result)
+        if result.code ~= 0 then
+          done()
+          vim.notify('Kitty dock: ' .. (result.stderr or 'command failed'), vim.log.levels.ERROR)
+          return
+        end
+        callback(result.stdout)
+      end))
+    end
+    local tag = kind .. '-' .. owner
+    run({ 'ls' }, function(output)
+      local ok, windows = pcall(vim.json.decode, output)
+      if not ok then
+        done()
+        vim.notify('Could not decode Kitty window list', vim.log.levels.ERROR)
+        return
+      end
+      local existing
+      for _, os_window in ipairs(windows) do
+        for _, tab in ipairs(os_window.tabs) do
+          for _, window in ipairs(tab.windows) do
+            if (window.user_vars or {}).nvim_dock == tag then
+              existing = window.id
+            end
+          end
+        end
+      end
+      if existing then
+        if kind == 'yazi' then
+          run({ 'close-window', '--match=id:' .. existing }, done)
+        else
+          run({ 'kitten', dock_helper, owner, tostring(existing) }, done)
+        end
+        return
+      end
 
-  if server == '' or not kitty_window then
-    vim.notify('Neovim must be running inside Kitty', vim.log.levels.ERROR)
-    return
+      -- Only launching Claude requires its integration server to be running.
+      local env = launch_env()
+      if not env then
+        done()
+        return
+      end
+      local args = {
+        'launch', '--type=tab-dock', '--match=window_id:' .. owner,
+        '--dock-edge=' .. edge, '--dock-size=' .. size,
+        '--cwd=' .. vim.fn.getcwd(), '--var=nvim_dock=' .. tag,
+      }
+      -- if kind == 'yazi' then
+      --   args[#args + 1] = '--keep-focus'
+      -- end
+      for key, value in pairs(env) do
+        args[#args + 1] = '--env=' .. key .. '=' .. value
+      end
+      args[#args + 1] = kind
+      run(args, done)
+    end)
   end
 
-  vim.fn.jobstart({
-    'kitten', '@', 'launch',
-    '--type=tab-dock',
-    '--dock-edge=left',
-    '--dock-size=25%',
-    '--keep-focus',
-    '--cwd=' .. vim.fn.getcwd(),
-    '--env=NVIM_SERVER=' .. server,
-    '--env=NVIM_KITTY_WINDOW_ID=' .. kitty_window,
-    'yazi',
-  })
-  end, { desc = 'Open Yazi dock' })
+  vim.keymap.set('n', '<leader>ty', function()
+    kitty_dock('yazi', 'left', '20%', function()
+      if vim.v.servername == '' then
+        vim.notify('Neovim server is not running', vim.log.levels.ERROR)
+        return
+      end
+      return {
+        NVIM_SERVER = vim.v.servername,
+        NVIM_KITTY_WINDOW_ID = vim.env.KITTY_WINDOW_ID,
+      }
+    end)
+  end, { desc = 'Open/close Yazi dock' })
+
+  vim.keymap.set('n', '<leader>tc', function()
+    kitty_dock('claude', 'right', '25%', function()
+      local port = require('claudecode').state.port
+      if not port then
+        vim.notify('claudecode.nvim server is not running (:ClaudeCodeStart)', vim.log.levels.ERROR)
+        return
+      end
+      return {
+        CLAUDE_CODE_SSE_PORT = tostring(port),
+        ENABLE_IDE_INTEGRATION = 'true',
+      }
+    end)
+  end, { desc = 'Toggle Claude dock (keep running)' })
+
+  vim.keymap.set('n', '<leader>tp', function()
+    kitty_dock('pi', 'right', '25%', function()
+      return {}
+    end)
+  end, { desc = 'Toggle Pi dock (keep running)' })
 end
 
 -- Section 12: Latex integration
@@ -1245,8 +1287,8 @@ end
 
 -- Pi integration
 do
-  vim.pack.add { "https://github.com/carderne/pi-nvim" }
-  -- require("pi-nvim").setup()
+  -- Use the local fork for both the Lua plugin and Pi extension development.
+  vim.opt.runtimepath:prepend(vim.fn.expand("~/git/pi-nvim"))
   require("pi-nvim").setup({
     socket_path = nil, -- auto-discover
     set_default_keymaps = true,
