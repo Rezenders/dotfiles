@@ -1,0 +1,4 @@
+[opener]
+edit = [
+  { run = 'if [ -n "$NVIM_SERVER" ]; then nvim --server "$NVIM_SERVER" --remote %s && kitten @ focus-window --match "id:$NVIM_KITTY_WINDOW_ID"; else "${EDITOR:-nvim}" %s; fi', block = true, for = "unix", desc = "Edit in Neovim" },
+]

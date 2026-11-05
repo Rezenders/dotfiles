@@ -1,0 +1,14 @@
+[[mgr.prepend_keymap]]
+on = "P"
+run = "plugin toggle-pane min-preview"
+desc = "Toggle preview pane"
+
+[[mgr.prepend_keymap]]
+on = "M"
+run = "plugin toggle-pane max-preview"
+desc = "Maximize preview pane"
+
+[[mgr.prepend_keymap]]
+on = "<A-p>"
+run = "plugin toggle-pane min-parent"
+desc = "Toggle parent directory pane"
