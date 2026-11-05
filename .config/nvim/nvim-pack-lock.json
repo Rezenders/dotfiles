@@ -188,6 +188,10 @@
     "which-key.nvim": {
       "rev": "3aab2147e74890957785941f0c1ad87d0a44c15a",
       "src": "https://github.com/folke/which-key.nvim"
+    },
+    "yazi.nvim": {
+      "rev": "23105e0e9c644b7a52e711407922bf44999f8524",
+      "src": "https://github.com/mikavilpas/yazi.nvim"
     }
   }
 }
