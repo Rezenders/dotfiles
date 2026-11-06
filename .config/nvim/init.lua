@@ -539,7 +539,14 @@ do
   -- fzf-lua uses the external fzf binary. Press <F1> in a picker for help.
   vim.pack.add { gh 'ibhagwan/fzf-lua' }
   local fzf = require 'fzf-lua'
-  fzf.setup {}
+  fzf.setup {
+    keymap = {
+      builtin = {
+        ["<C-d>"] = "preview-page-down",
+        ["<C-u>"] = "preview-page-up",
+    },
+  },
+  }
   fzf.register_ui_select()
 
   vim.keymap.set('n', '<leader>sh', fzf.helptags, { desc = '[S]earch [H]elp' })
@@ -972,6 +979,7 @@ do
   require 'kickstart.plugins.debug'
   require 'kickstart.plugins.indent_line'
   require 'kickstart.plugins.lint'
+  require('custom.line_length').setup()
   require 'kickstart.plugins.autopairs'
   require 'kickstart.plugins.neo-tree'
 
