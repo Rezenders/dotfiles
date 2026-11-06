@@ -800,7 +800,13 @@ do
 
   require('conform').setup {
     formatters_by_ft = {
-      markdown = { 'prettier' },
+      markdown = { 'prettier_markdown' },
+    },
+    formatters = {
+      prettier_markdown = {
+        inherit = 'prettier',
+        prepend_args = { '--prose-wrap', 'always', '--print-width', '80' },
+      },
     },
   }
 
