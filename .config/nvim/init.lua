@@ -112,9 +112,6 @@ do
   -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
   -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
   -- is not what someone will guess without a bit more experience.
-  --
-  -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
-  -- or just use <C-\><C-n> to exit terminal mode
   vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
   -- TIP: Disable arrow keys in normal mode
@@ -187,6 +184,10 @@ do
 
       trim_trailing_whitespace()
     end,
+  })
+
+  vim.keymap.set("n", "<leader>x", "<cmd>bd<CR>", {
+    desc = "Close current buffer",
   })
 end
 
@@ -698,9 +699,6 @@ do
     end,
   })
 
-  -- Client-side LTeX commands: dictionary, false positives, and rule disabling.
-  vim.pack.add { gh 'barreiroleo/ltex_extra.nvim' }
-
   -- Enable the following language servers
   --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
   --  See `:help lsp-config` for information about keys and how to configure
@@ -708,32 +706,7 @@ do
   local servers = {
     clangd = {},
     pyright = {},
-    texlab = {
-        settings = {
-            texlab = {
-              build = {
-                  onSave = false,
-              },
-              -- Use latexindent for formatting
-              latexFormatter = "latexindent",
-
-              latexindent = {
-                  modifyLineBreaks = false,
-              },
-            },
-        },
-    },
-    -- Grammar and spelling checking
-    ltex_plus = {
-        filetypes = { "tex", "plaintex", "markdown" },
-        -- Bind deferred dictionary updates to the attached LTeX client.
-        on_attach = require('custom.ltex_extra').on_attach,
-        settings = {
-            ltex = {
-                language = "en-US",
-            },
-        },
-    },
+    -- texlab and ltex_plus are added below from custom.latex.lsp
     --
     -- Some languages (like rust) have entire language plugins that can be useful:
     --    https://github.com/mrcjkb/rustaceanvim
@@ -775,6 +748,8 @@ do
       },
     },
   }
+  -- LaTeX language servers (texlab, ltex_plus)
+  servers = vim.tbl_extend('error', servers, require('custom.latex.lsp').servers())
 
   vim.pack.add {
     gh 'neovim/nvim-lspconfig',
@@ -847,19 +822,8 @@ do
   require('luasnip.loaders.from_vscode').lazy_load()
 
   -- VimTeX completion source for blink.cmp
-  vim.pack.add {
-      gh 'micangl/cmp-vimtex',
-      {
-          src = gh 'saghen/blink.compat',
-          version = vim.version.range '2.*',
-      },
-  }
-
-  require('blink.compat').setup({})
-  require('cmp_vimtex').setup({
-    -- Use VimTeX's bibliography data instead of cmp-vimtex's faulty async parser.
-    bibtex_parser = { enabled = false },
-  })
+  local latex_completion = require 'custom.latex.completion'
+  latex_completion.setup()
 
   -- [[ Autocomplete Engine ]]
   vim.pack.add { { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' } }
@@ -904,22 +868,10 @@ do
       documentation = { auto_show = false, auto_show_delay_ms = 500 },
     },
 
-    sources = {
+    -- VimTeX source for LaTeX files comes from custom.latex.completion
+    sources = vim.tbl_deep_extend('error', {
       default = { 'lsp', 'path', 'snippets' },
-      -- Add VimTeX completion only for LaTeX files
-      per_filetype = {
-          tex = { 'vimtex', inherit_defaults = true },
-      },
-
-      -- Configure the VimTeX completion provider
-      providers = {
-        vimtex = {
-            name = 'vimtex',
-            module = 'blink.compat.source',
-            min_keyword_length = 0,
-        },
-      },
-    },
+    }, latex_completion.blink_sources),
 
     snippets = { preset = 'luasnip' },
 
@@ -1014,7 +966,7 @@ do
 
   -- NOTE: Next step on your Neovim journey: Add/Configure additional plugins for Kickstart
   --
-  --  Here are some example plugins that I've included in the Kickstart repository.
+  -- Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   require 'kickstart.plugins.debug'
@@ -1264,57 +1216,10 @@ do
 end
 
 -- Section 12: Latex integration
+-- VimTeX + LaTeX snippets. LSP servers and completion are wired in sections 6 and 8;
+-- buffer-local options/keymaps are in after/ftplugin/tex.lua. See lua/custom/latex/.
 do
-  -- Plugins
-  vim.pack.add {
-    gh 'lervag/vimtex',
-    gh 'iurimateus/luasnip-latex-snippets.nvim',
-  }
-
-  vim.g.vimtex_view_method = vim.g.vimtex_view_method or "zathura_simple"
-
-  -- Load mathematical LaTeX snippets
-  require("luasnip-latex-snippets").setup({
-      use_treesitter = false,
-      allow_on_markdown = false,
-  })
-
-  vim.api.nvim_create_autocmd("FileType", {
-        pattern = "tex",
-        callback = function(args)
-            vim.keymap.set("n", "<leader>lf", function()
-                vim.lsp.buf.format({
-                    async = true,
-                    filter = function(client)
-                        return client.name == "texlab"
-                    end,
-                })
-            end, {
-                buffer = args.buf,
-                desc = "Format LaTeX document",
-            })
-
-            -- spell checking
-            vim.opt_local.spell = true
-            vim.opt_local.spelllang = "en_us"
-
-            -- Line wrapping
-            vim.opt_local.wrap = true
-            vim.opt_local.linebreak = true
-
-            -- show math symbols as unicode
-            vim.opt_local.conceallevel = 2
-            vim.opt_local.concealcursor = ""
-
-            -- indentation set to 2 spaces
-            -- LaTeX indentation
-            vim.opt_local.expandtab = true
-            vim.opt_local.shiftwidth = 2
-            vim.opt_local.tabstop = 2
-            vim.opt_local.softtabstop = 2
-        end,
-    })
-
+  require('custom.latex').setup()
 end
 
 

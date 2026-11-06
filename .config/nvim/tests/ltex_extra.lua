@@ -49,7 +49,7 @@ local file = vim.api.nvim_get_current_buf()
 local sidebar = vim.api.nvim_create_buf(false, true)
 attached[file] = first
 attached[sidebar] = second -- A different client must not receive the update either.
-local compat = require('custom.ltex_extra')
+local compat = require('custom.latex.ltex_extra')
 compat.on_attach(first)
 vim.api.nvim_set_current_buf(sidebar)
 drain()
