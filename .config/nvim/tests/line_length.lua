@@ -16,9 +16,15 @@ package.loaded.lint = {
   linters = { markdownlint = { cmd = executable, args = { '--stdin' } } },
 }
 local guide = require 'custom.line_length'
+local system = vim.system
+local lookups = 0
+vim.system = function(...)
+  lookups = lookups + 1
+  return system(...)
+end
+local function saved(name) vim.api.nvim_exec_autocmds('BufWritePost', { pattern = root .. '/' .. name }) end
 local function expect(column)
-  assert(vim.wait(5000, function() return vim.wo.colorcolumn == column end, 10),
-    ('Expected colorcolumn %q, got %q'):format(column, vim.wo.colorcolumn))
+  assert(vim.wait(5000, function() return vim.wo.colorcolumn == column end, 10), ('Expected colorcolumn %q, got %q'):format(column, vim.wo.colorcolumn))
 end
 local function configure(lines, name)
   vim.fn.writefile(lines, name or '.markdownlint.json')
@@ -80,9 +86,73 @@ local ok, err = xpcall(function()
   guide.refresh()
   expect '91'
 
-  -- Config saves invalidate the cache, including arbitrary inheritance filenames.
+  -- Unrelated saves must not spawn a configuration resolver.
+  local before = lookups
+  saved 'unrelated.py'
+  vim.wait(250)
+  assert(lookups == before, 'Unrelated saves must preserve the cache')
+
+  -- Bursts coalesce, keeping the previous guide while waiting and resolving.
   vim.fn.writefile({ '{ "MD013": { "line_length": 110 } }' }, '.markdownlint.jsonc')
-  vim.api.nvim_exec_autocmds('BufWritePost', { buffer = markdown_buf })
+  for _ = 1, 5 do
+    saved '.markdownlint.jsonc'
+  end
+  guide.refresh()
+  assert(vim.wo.colorcolumn == '91', 'Refreshing must not reset the guide to 80')
+  assert(lookups == before, 'Save invalidation should be debounced')
+  expect '111'
+  assert(lookups == before + 1, 'A burst should perform one lookup')
+
+  -- Nested inherited files may have arbitrary names.
+  vim.fn.writefile({ '{ "MD013": { "line_length": 112 } }' }, 'policy.data')
+  vim.fn.writefile({ '{ "extends": "policy.data" }' }, 'base.json')
+  vim.fn.writefile({ '{ "extends": "base.json" }' }, '.markdownlint.jsonc')
+  saved '.markdownlint.jsonc'
+  expect '113'
+  vim.fn.writefile({ '{ "MD013": { "line_length": 110 } }' }, 'policy.data')
+  saved 'policy.data'
+  expect '111'
+
+  -- Focus refreshes are also debounced and keep the last known limit.
+  before = lookups
+  for _ = 1, 5 do
+    vim.api.nvim_exec_autocmds('FocusGained', {})
+  end
+  assert(vim.wo.colorcolumn == '111')
+  assert(vim.wait(5000, function() return lookups == before + 1 end, 10))
+  vim.wait(300)
+  assert(lookups == before + 1)
+
+  -- A newly created higher-priority candidate must also be a dependency.
+  vim.fn.delete '.markdownlint.jsonc'
+  guide.invalidate()
+  expect '81'
+  vim.fn.writefile({ '{ "MD013": { "line_length": 110 } }' }, '.markdownlint.jsonc')
+  saved '.markdownlint.jsonc'
+  expect '111'
+
+  -- An invalidation during an in-flight lookup must reject its stale result.
+  local release
+  vim.system = function(command, options, callback)
+    lookups = lookups + 1
+    return system(command, options, function(result)
+      release = function() callback(result) end
+    end)
+  end
+  guide.invalidate()
+  assert(vim.wait(5000, function() return release ~= nil end, 10))
+  vim.system = function(...)
+    lookups = lookups + 1
+    return system(...)
+  end
+  vim.fn.writefile({ '{ "MD013": { "line_length": 114 } }' }, '.markdownlint.jsonc')
+  saved '.markdownlint.jsonc'
+  release()
+  vim.wait(20)
+  assert(vim.wo.colorcolumn == '111', 'A stale result must not replace the previous guide')
+  expect '115'
+  vim.fn.writefile({ '{ "extends": "base.json" }' }, '.markdownlint.jsonc')
+  saved '.markdownlint.jsonc'
   expect '111'
 
   -- A different window-local cwd must resolve independently, like nvim-lint.
@@ -92,12 +162,27 @@ local ok, err = xpcall(function()
   expect '81'
   assert(vim.wait(5000, function() return vim.wo[markdown_win].colorcolumn == '111' end, 10))
 
+  -- Only the cwd whose dependency changed is resolved again.
+  vim.wait(300)
+  before = lookups
+  vim.fn.writefile({ '{ "MD013": { "line_length": 116 } }' }, root .. '/policy.data')
+  saved 'policy.data'
+  assert(vim.wait(5000, function() return vim.wo[markdown_win].colorcolumn == '117' end, 10))
+  assert(vim.wo.colorcolumn == '81')
+  assert(lookups == before + 1, 'Dependency saves must invalidate only affected entries')
+
+  -- run-con's missing rc candidates are tracked as well as markdownlint configs.
+  vim.fn.writefile({ '{ "MD013": { "line_length": 92 } }' }, '.markdownlintrc')
+  saved 'other/.markdownlintrc'
+  expect '93'
+
   -- Unsupported custom CLI arguments use the fallback, not a guessed limit.
   package.loaded.lint.linters.markdownlint.args = { '--stdin', '--disable', 'MD013' }
   guide.invalidate()
   expect '81'
 end, debug.traceback)
+vim.system = system
 vim.fn.chdir(config)
 vim.fn.delete(root, 'rf')
 assert(ok, err)
-print('line_length: all tests passed')
+print 'line_length: all tests passed'

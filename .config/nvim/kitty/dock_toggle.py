@@ -4,7 +4,6 @@ Uses Kitty's internal tab APIs because detach-window does not restore DockSpec.
 Invoked by init.lua through `kitten @ kitten /absolute/path/to/this/file`.
 """
 from kittens.tui.handler import result_handler
-from kitty.types import DockSpec
 
 
 def main(args):
@@ -25,6 +24,12 @@ def handle_result(args, answer, target_window_id, boss):
 
     with boss.suppress_focus_change_events():
         if source is home:
+            group = source.windows.group_for_window(window)
+            if group is None or group.dock is None:
+                raise ValueError('Window is not a dock')
+            # Detaching drops the group's DockSpec. Keep it on the live window
+            # so it survives separate kitten invocations without global state.
+            window._nvim_dock_spec = group.dock
             # Share a parking tab between this Neovim's Pi and Claude windows.
             title = f'NVIM docks [{owner_id}]'
             manager = boss.os_window_map[home.os_window_id]
@@ -33,14 +38,16 @@ def handle_result(args, answer, target_window_id, boss):
                 parking = manager.new_tab(empty_tab=True, title=title)
             parking.attach_windows(source.detach_window(window))
         else:
-            # A parked dock is an ordinary window. Reattach it with its original
-            # right-side sizing rather than adding it to the editing layout.
+            # A parked dock is an ordinary window. Restore its full DockSpec,
+            # including edge, size units, and focusability.
+            dock = getattr(window, '_nvim_dock_spec', None)
+            if dock is None:
+                raise ValueError('Parked window has no saved dock specification')
             detached = source.detach_window(window)
             for index, item in enumerate(detached.windows):
                 home._take_ownership_of_window(item)
                 if index == 0:
-                    home._add_window(item, dock=DockSpec(
-                        edge='right', size=25, size_is_percent=True))
+                    home._add_window(item, dock=dock)
                 else:
                     home._add_window(item, overlay_for=window.id)
             boss._cleanup_tab_after_window_removal(source)

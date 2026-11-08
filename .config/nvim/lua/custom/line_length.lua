@@ -1,12 +1,11 @@
 -- Visual guide only: never changes textwidth, wrapping, or lint policy.
 local M = {}
 local cache = {}
-local generation = 0
+local debounce = 0
+local refresh_scheduled = false
 local helper = vim.fs.joinpath(vim.fs.dirname(debug.getinfo(1, 'S').source:sub(2)), 'markdown_line_length.cjs')
 
-local function valid_limit(value)
-  return type(value) == 'number' and value > 0 and value < math.huge and value == math.floor(value)
-end
+local function valid_limit(value) return type(value) == 'number' and value > 0 and value < math.huge and value == math.floor(value) end
 
 local function markdown_context(win)
   local ok, lint = pcall(require, 'lint')
@@ -28,9 +27,7 @@ local function markdown_context(win)
 end
 
 local function apply(win, limit)
-  if vim.api.nvim_win_is_valid(win) then
-    vim.wo[win].colorcolumn = valid_limit(limit) and tostring(limit + 1) or ''
-  end
+  if vim.api.nvim_win_is_valid(win) then vim.wo[win].colorcolumn = valid_limit(limit) and tostring(limit + 1) or '' end
 end
 
 function M.refresh()
@@ -55,16 +52,29 @@ function M.refresh()
           local key = cwd .. '\0' .. executable
           local entry = cache[key]
           if not entry then
-            entry = { limit = 80 }
+            entry = { limit = 80, revision = 0, dirty = true }
             cache[key] = entry
-            local current_generation = generation
+          end
+          if entry.dirty and not entry.pending and not refresh_scheduled then
+            entry.dirty = false
+            entry.pending = true
+            local revision = entry.revision
             vim.system({ 'node', helper, executable }, { cwd = cwd, text = true }, function(result)
               vim.schedule(function()
-                if current_generation ~= generation then return end
+                entry.pending = false
+                if revision ~= entry.revision then
+                  M.refresh()
+                  return
+                end
+                entry.error = nil
                 if result.code == 0 then
                   local ok, decoded = pcall(vim.json.decode, result.stdout)
                   if ok and type(decoded) == 'table' and (decoded.limit == false or valid_limit(decoded.limit)) then
                     entry.limit = decoded.limit
+                    entry.dependencies = {}
+                    for _, path in ipairs(decoded.dependencies or {}) do
+                      entry.dependencies[vim.fs.normalize(path)] = true
+                    end
                   else
                     entry.error = true
                   end
@@ -72,7 +82,11 @@ function M.refresh()
                   entry.error = true
                 end
                 if entry.error then
-                  vim.notify('Line-length guide: could not read markdownlint configuration; using 80. Run :LineLengthRefresh to retry.', vim.log.levels.WARN)
+                  entry.dependencies = nil
+                  vim.notify(
+                    'Line-length guide: could not read markdownlint configuration; keeping the previous guide (80 if unresolved). Run :LineLengthRefresh to retry.',
+                    vim.log.levels.WARN
+                  )
                 end
                 M.refresh()
               end)
@@ -85,9 +99,33 @@ function M.refresh()
   end
 end
 
+local function invalidate(path, delayed)
+  local changed = false
+  for _, entry in pairs(cache) do
+    -- Until a lookup succeeds, its dependencies are unknown; be conservative.
+    if not path or not entry.dependencies or entry.dependencies[path] or entry.dependencies[vim.fn.resolve(path)] then
+      entry.revision = entry.revision + 1
+      entry.dirty = true
+      changed = true
+    end
+  end
+  if not changed then return end
+  debounce = debounce + 1
+  local token = debounce
+  refresh_scheduled = delayed or false
+  if delayed then
+    vim.defer_fn(function()
+      if token ~= debounce then return end
+      refresh_scheduled = false
+      M.refresh()
+    end, 100)
+  else
+    M.refresh()
+  end
+end
+
 function M.invalidate()
-  generation = generation + 1
-  cache = {}
+  invalidate(nil, false)
   M.refresh()
 end
 
@@ -98,10 +136,19 @@ function M.setup()
     callback = M.refresh,
   })
   -- Includes inherited config files with arbitrary names, not just .markdownlint.*.
-  vim.api.nvim_create_autocmd({ 'BufWritePost', 'DirChanged', 'FocusGained' }, {
+  vim.api.nvim_create_autocmd('BufWritePost', {
     group = group,
-    callback = M.invalidate,
+    callback = function(event)
+      local path = event.file ~= '' and vim.fn.fnamemodify(event.file, ':p') or ''
+      if path ~= '' then invalidate(vim.fs.normalize(path), true) end
+    end,
   })
+  -- External edits cannot be attributed to a particular dependency.
+  vim.api.nvim_create_autocmd('FocusGained', {
+    group = group,
+    callback = function() invalidate(nil, true) end,
+  })
+  vim.api.nvim_create_autocmd('DirChanged', { group = group, callback = M.refresh })
   vim.api.nvim_create_user_command('LineLengthRefresh', M.invalidate, { force = true, desc = 'Reload line-length guides' })
   M.refresh()
 end
