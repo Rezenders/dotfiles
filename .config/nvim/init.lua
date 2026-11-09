@@ -96,127 +96,126 @@ end
 -- basic keymaps, basic autocmds
 -- ============================================================
 do
--- [[ Basic Keymaps ]]
---  See `:help vim.keymap.set()`
+  -- [[ Basic Keymaps ]]
+  --  See `:help vim.keymap.set()`
 
--- Clear highlights on search when pressing <Esc> in normal mode
---  See `:help hlsearch`
-vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+  -- Clear highlights on search when pressing <Esc> in normal mode
+  --  See `:help hlsearch`
+  vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
--- Diagnostic Config & Keymaps
---  See `:help vim.diagnostic.Opts`
-vim.diagnostic.config {
-  update_in_insert = false,
-  severity_sort = true,
-  float = { border = 'rounded', source = 'if_many' },
-  underline = { severity = { min = vim.diagnostic.severity.WARN } },
+  -- Diagnostic Config & Keymaps
+  --  See `:help vim.diagnostic.Opts`
+  vim.diagnostic.config {
+    update_in_insert = false,
+    severity_sort = true,
+    float = { border = 'rounded', source = 'if_many' },
+    underline = { severity = { min = vim.diagnostic.severity.WARN } },
 
-  -- Can switch between these as you prefer
-  virtual_text = true, -- Text shows up at the end of the line
-  virtual_lines = false, -- Text shows up underneath the line, with virtual lines
+    -- Can switch between these as you prefer
+    virtual_text = true, -- Text shows up at the end of the line
+    virtual_lines = false, -- Text shows up underneath the line, with virtual lines
 
-  -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
-  jump = {
-    on_jump = function(_, bufnr)
-      vim.diagnostic.open_float {
-        bufnr = bufnr,
-        scope = 'cursor',
-        focus = false,
-      }
-    end,
-  },
-  signs = {
-    text = {
-       [vim.diagnostic.severity.ERROR] = '󰅚 ',
-       [vim.diagnostic.severity.WARN]  = '󰀪 ',
-       [vim.diagnostic.severity.INFO]  = '󰋽 ',
-       [vim.diagnostic.severity.HINT]  = '󰌶 ',
+    -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
+    jump = {
+      on_jump = function(_, bufnr)
+        vim.diagnostic.open_float {
+          bufnr = bufnr,
+          scope = 'cursor',
+          focus = false,
+        }
+      end,
     },
-  },
-}
+    signs = {
+      text = {
+         [vim.diagnostic.severity.ERROR] = '󰅚 ',
+         [vim.diagnostic.severity.WARN]  = '󰀪 ',
+         [vim.diagnostic.severity.INFO]  = '󰋽 ',
+         [vim.diagnostic.severity.HINT]  = '󰌶 ',
+      },
+    },
+  }
 
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+  vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
--- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
--- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
--- is not what someone will guess without a bit more experience.
-vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
+  -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
+  -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
+  -- is not what someone will guess without a bit more experience.
+  vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+  -- TIP: Disable arrow keys in normal mode
+  -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+  -- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+  -- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+  -- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
--- Keybinds to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
---
---  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+  -- Keybinds to make split navigation easier.
+  --  Use CTRL+<hjkl> to switch between windows
+  --
+  --  See `:help wincmd` for a list of all window commands
+  vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
+  vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
+  vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
+  vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
--- [[ Basic Autocommands ]]
---  See `:help lua-guide-autocommands`
+  -- [[ Basic Autocommands ]]
+  --  See `:help lua-guide-autocommands`
 
--- Highlight when yanking (copying) text
---  Try it with `yap` in normal mode
---  See `:help vim.hl.on_yank()`
-vim.api.nvim_create_autocmd('TextYankPost', {
-  desc = 'Highlight when yanking (copying) text',
-  group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
-  callback = function() vim.hl.hl_op() end,
-})
+  -- Highlight when yanking (copying) text
+  --  Try it with `yap` in normal mode
+  --  See `:help vim.hl.on_yank()`
+  vim.api.nvim_create_autocmd('TextYankPost', {
+    desc = 'Highlight when yanking (copying) text',
+    group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
+    callback = function() vim.hl.hl_op() end,
+  })
 
--- Toggle comments with Ctrl + /
-vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment' })
-vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment' })
+  -- Toggle comments with Ctrl + /
+  vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment' })
+  vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment' })
 
-local excluded_filetypes = {
-  markdown = true,
-  rmd = true,
-  quarto = true,
-  diff = true,
-  gitcommit = true,
-}
+  local excluded_filetypes = {
+    markdown = true,
+    rmd = true,
+    quarto = true,
+    diff = true,
+    gitcommit = true,
+  }
 
-local function trim_trailing_whitespace()
-  local view = vim.fn.winsaveview()
+  local function trim_trailing_whitespace()
+    local view = vim.fn.winsaveview()
 
-  vim.cmd([[silent! keeppatterns keepjumps %s/\s\+$//e]])
+    vim.cmd([[silent! keeppatterns keepjumps %s/\s\+$//e]])
 
-  vim.fn.winrestview(view)
-end
+    vim.fn.winrestview(view)
+  end
 
-vim.api.nvim_create_autocmd("BufWritePre", {
-  group = vim.api.nvim_create_augroup(
-    "trim-trailing-whitespace",
-    { clear = true }
-  ),
+  vim.api.nvim_create_autocmd("BufWritePre", {
+    group = vim.api.nvim_create_augroup(
+      "trim-trailing-whitespace",
+      { clear = true }
+    ),
 
-  pattern = "*",
+    pattern = "*",
 
-  callback = function(args)
-    local buf = args.buf
+    callback = function(args)
+      local buf = args.buf
 
-    -- Ignore special and binary buffers
-    if vim.bo[buf].buftype ~= "" or vim.bo[buf].binary then
-      return
-    end
+      -- Ignore special and binary buffers
+      if vim.bo[buf].buftype ~= "" or vim.bo[buf].binary then
+        return
+      end
 
-    -- Ignore filetypes where whitespace may be significant
-    if excluded_filetypes[vim.bo[buf].filetype] then
-      return
-    end
+      -- Ignore filetypes where whitespace may be significant
+      if excluded_filetypes[vim.bo[buf].filetype] then
+        return
+      end
 
-    trim_trailing_whitespace()
-  end,
-})
-
-vim.keymap.set("n", "<leader>x", "<cmd>bd<CR>", {
-  desc = "Close current buffer",
-})
+      trim_trailing_whitespace()
+    end,
+  })
+  vim.keymap.set("n", "<leader>x", "<cmd>bd<CR>", {
+    desc = "Close current buffer",
+  })
 end
 
 -- ============================================================
@@ -237,47 +236,40 @@ do
 --
 --  To update plugins, run
 --    :lua vim.pack.update()
---
---
---  Throughout the rest of the config there will be examples
---  of how to install and configure plugins using `vim.pack`.
---
---  In this section we set up some autocommands to run build
---  steps for certain plugins after they are installed or updated.
 
-local function run_build(name, cmd, cwd)
-  local result = vim.system(cmd, { cwd = cwd }):wait()
-  if result.code ~= 0 then
-    local stderr = result.stderr or ''
-    local stdout = result.stdout or ''
-    local output = stderr ~= '' and stderr or stdout
-    if output == '' then output = 'No output from build command.' end
-    vim.notify(('Build failed for %s:\n%s'):format(name, output), vim.log.levels.ERROR)
+  local function run_build(name, cmd, cwd)
+    local result = vim.system(cmd, { cwd = cwd }):wait()
+    if result.code ~= 0 then
+      local stderr = result.stderr or ''
+      local stdout = result.stdout or ''
+      local output = stderr ~= '' and stderr or stdout
+      if output == '' then output = 'No output from build command.' end
+      vim.notify(('Build failed for %s:\n%s'):format(name, output), vim.log.levels.ERROR)
+    end
   end
-end
 
--- This autocommand runs after a plugin is installed or updated and
---  runs the appropriate build command for that plugin if necessary.
---
--- See `:help vim.pack-events`
-vim.api.nvim_create_autocmd('PackChanged', {
-  callback = function(ev)
-    local name = ev.data.spec.name
-    local kind = ev.data.kind
-    if kind ~= 'install' and kind ~= 'update' then return end
+  -- This autocommand runs after a plugin is installed or updated and
+  --  runs the appropriate build command for that plugin if necessary.
+  --
+  -- See `:help vim.pack-events`
+  vim.api.nvim_create_autocmd('PackChanged', {
+    callback = function(ev)
+      local name = ev.data.spec.name
+      local kind = ev.data.kind
+      if kind ~= 'install' and kind ~= 'update' then return end
 
-    if name == 'LuaSnip' then
-      if vim.fn.has 'win32' ~= 1 and vim.fn.executable 'make' == 1 then run_build(name, { 'make', 'install_jsregexp' }, ev.data.path) end
-      return
-    end
+      if name == 'LuaSnip' then
+        if vim.fn.has 'win32' ~= 1 and vim.fn.executable 'make' == 1 then run_build(name, { 'make', 'install_jsregexp' }, ev.data.path) end
+        return
+      end
 
-    if name == 'nvim-treesitter' then
-      if not ev.data.active then vim.cmd.packadd 'nvim-treesitter' end
-      vim.cmd 'TSUpdate'
-      return
-    end
-  end,
-})
+      if name == 'nvim-treesitter' then
+        if not ev.data.active then vim.cmd.packadd 'nvim-treesitter' end
+        vim.cmd 'TSUpdate'
+        return
+      end
+    end,
+  })
 end
 
 --- Because most plugins are hosted on GitHub, you can use the helper
