@@ -73,6 +73,16 @@ do
   -- Uses 24-bit hex definitions colors
   vim.opt.termguicolors = true
   -- END
+
+  vim.opt.fillchars = {
+     vert = '│',       -- thin solid vertical split divider
+     horiz = '─',      -- thin solid horizontal split divider
+     eob = ' ',        -- hide the '~' characters on lines past end-of-buffer
+     fold = ' ',       -- cleaner fold filler
+     diff = '╱',       -- cleaner diff fillers
+  }
+  -- vim.o.pumblend = 10 -- transparency for popup menu / completions (0-100)
+  -- vim.o.winblend = 10  -- keep at 0 if you prefer crisp contrast, or 5-10 for subtle float glass effect
 end
 
 -- ============================================================
@@ -108,6 +118,14 @@ vim.diagnostic.config {
         focus = false,
       }
     end,
+  },
+  signs = {
+    text = {
+       [vim.diagnostic.severity.ERROR] = '󰅚 ',
+       [vim.diagnostic.severity.WARN]  = '󰀪 ',
+       [vim.diagnostic.severity.INFO]  = '󰋽 ',
+       [vim.diagnostic.severity.HINT]  = '󰌶 ',
+    },
   },
 }
 
@@ -367,9 +385,13 @@ do
   -- Useful plugin to show you pending keybinds.
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {
+    preset = 'modern',
+    win = {
+       border = 'rounded', -- 'single', 'double', 'rounded', 'shadow'
+    },
+    icons = { mappings = vim.g.have_nerd_font },
     -- Delay between pressing a key and opening which-key (milliseconds)
     delay = 0,
-    icons = { mappings = vim.g.have_nerd_font },
     -- Document existing key chains
     spec = {
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
@@ -436,9 +458,14 @@ do
   if system_is_dark() then
     vim.o.background = 'dark'
     vim.cmd.colorscheme 'gruvbox'
+    vim.api.nvim_set_hl(0, 'WhichKeyNormal', { bg = '#1d2021', fg = '#ebdbb2' })
+    vim.api.nvim_set_hl(0, 'WhichKeyBorder', { bg = '#1d2021', fg = '#504945' })
+    vim.api.nvim_set_hl(0, 'WhichKeyTitle',  { bg = '#1d2021', fg = '#fabd2f', bold = true })
   else
     vim.o.background = 'light'
     vim.cmd.colorscheme 'onehalflight'
+    vim.api.nvim_set_hl(0, 'WhichKeyNormal', { bg = '#f0f0f0', fg = '#383a42' })
+    vim.api.nvim_set_hl(0, 'WhichKeyBorder', { bg = '#f0f0f0', fg = '#d0d0d0' })
   end
 
 
@@ -528,8 +555,22 @@ do
       builtin = {
         ["<C-d>"] = "preview-page-down",
         ["<C-u>"] = "preview-page-up",
+      },
     },
-  },
+    winopts = {
+      border = 'rounded',
+      width = 0.9,
+      height = 0.9,
+      preview = {
+        layout = 'flex',
+        flip_columns = 135, -- anything under 135 cols switches to vertical split
+        horizontal = 'right:45%', -- preview on right only in genuinely wide panes
+        vertical = 'down:40%', -- preview on bottom in medium/narrow panes
+      },
+    },
+    files = {
+      formatter = 'path.dirname_first',
+    },
   }
   fzf.register_ui_select()
 
