@@ -12,7 +12,13 @@ do
   vim.o.mouse = 'a'
 
   -- Don't show the mode, since it's already in the status line
-  vim.o.showmode = true
+  vim.o.showmode = false
+  vim.laststatus = 3
+  vim.cmdheight = 0
+
+  -- Unified floating-window style
+  vim.o.winborder = 'rounded'
+  vim.o.pumborder = 'rounded'
 
   -- Sync clipboard between OS and Neovim.
   --  Schedule the setting after `UiEnter` because it can increase startup-time.
@@ -454,6 +460,30 @@ do
     end,
   })
 
+  local function polish_ui()
+    local dark = vim.o.background == 'dark'
+    vim.api.nvim_set_hl(0, 'WinSeparator', {
+      fg = dark and '#504945' or '#d8d8d8',
+      bg = 'NONE',
+    })
+
+    vim.api.nvim_set_hl(0, 'SignColumn', {
+      bg = 'NONE',
+    })
+
+    vim.api.nvim_set_hl(0, 'FoldColumn', {
+      fg = dark and '#7c6f64' or '#9a9ca5',
+      bg = 'NONE',
+    })
+  end
+
+  vim.api.nvim_create_autocmd('ColorScheme', {
+    group = vim.api.nvim_create_augroup('ui-polish', { clear = true }),
+    callback = polish_ui,
+  })
+
+  polish_ui()
+
   -- Apply colorscheme based on desktop appearance.
   if system_is_dark() then
     vim.o.background = 'dark'
@@ -532,7 +562,10 @@ do
   -- Simple and easy statusline.
   local statusline = require 'mini.statusline'
   -- Set `use_icons` to true if you have a Nerd Font
-  statusline.setup { use_icons = vim.g.have_nerd_font }
+  statusline.setup {
+    use_icons = vim.g.have_nerd_font,
+    laststatus = 3
+  }
 
   -- You can configure sections in the statusline by overriding their
   -- default behavior. For example, here we set the section for
@@ -540,6 +573,8 @@ do
   ---@diagnostic disable-next-line: duplicate-set-field
   statusline.section_location = function() return '%2l:%-2v' end
 
+  require('mini.statuscolumn').setup()
+  require('mini.tabline').setup()
 end
 
 -- ============================================================
@@ -561,11 +596,17 @@ do
       border = 'rounded',
       width = 0.9,
       height = 0.9,
+      cursorline = true,
+      path_shorten = 2,
+      title_pos = 'left',
       preview = {
         layout = 'flex',
         flip_columns = 135, -- anything under 135 cols switches to vertical split
         horizontal = 'right:45%', -- preview on right only in genuinely wide panes
         vertical = 'down:40%', -- preview on bottom in medium/narrow panes
+
+        title_pos = 'left',
+        scrollbar = 'float',
       },
     },
     files = {
@@ -635,7 +676,19 @@ end
 do
   -- Useful status updates for LSP.
   vim.pack.add { gh 'j-hui/fidget.nvim' }
-  require('fidget').setup {}
+  require('fidget').setup {
+    notification = {
+      override_vim_notify = true,
+
+      window = {
+        border = 'rounded',
+        winblend = 0,
+        normal_hl = 'NormalFloat',
+        x_padding = 1,
+        y_padding = 1,
+      },
+    },
+  }
 
   --  This function gets run when an LSP attaches to a particular buffer.
   --    That is to say, every time a new file is opened that is associated with
@@ -1066,7 +1119,21 @@ do
     },
     source_selector = {
       winbar = true,
-      statusline = false
+      statusline = false,
+      content_layout = 'center',
+      tabs_layout = 'equal',
+      show_separator_on_edge = false,
+
+      sources = {
+        { source = 'filesystem', display_name = ' 󰉓 Files ' },
+        { source = 'buffers',    display_name = ' 󰈚 Buffers ' },
+        { source = 'git_status', display_name = ' 󰊢 Git ' },
+      },
+
+      separator = {
+        left = ' ',
+        right = ' ',
+      },
     }
   }
   vim.api.nvim_create_autocmd('FileType', {
