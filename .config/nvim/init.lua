@@ -13,8 +13,10 @@ do
 
   -- Don't show the mode, since it's already in the status line
   vim.o.showmode = false
-  vim.laststatus = 3
-  vim.cmdheight = 0
+  vim.o.laststatus = 3
+  vim.o.cmdheight = 0
+  -- Experimental message/cmdline UI: avoids "Press ENTER" prompts with cmdheight=0.
+  require('vim._core.ui2').enable {}
 
   -- Unified floating-window style
   vim.o.winborder = 'rounded'
@@ -109,11 +111,13 @@ do
     update_in_insert = false,
     severity_sort = true,
     float = { border = 'rounded', source = 'if_many' },
-    underline = { severity = { min = vim.diagnostic.severity.WARN } },
+    -- Mark problems by underlining the flagged range (every severity); the wavy style
+    -- and colours come from the DiagnosticUnderline* groups in polish_ui().
+    underline = true,
 
-    -- Can switch between these as you prefer
-    virtual_text = true, -- Text shows up at the end of the line
-    virtual_lines = false, -- Text shows up underneath the line, with virtual lines
+    -- No inline messages: read them with [d / ]d (float below) or <C-w>d on the word.
+    virtual_text = false,
+    virtual_lines = false,
 
     -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
     jump = {
@@ -301,11 +305,12 @@ do
   local gitsigns = require 'gitsigns'
   gitsigns.setup {
     signs = {
-      add = { text = '+' }, ---@diagnostic disable-line: missing-fields
-      change = { text = '~' }, ---@diagnostic disable-line: missing-fields
-      delete = { text = '_' }, ---@diagnostic disable-line: missing-fields
-      topdelete = { text = '‾' }, ---@diagnostic disable-line: missing-fields
-      changedelete = { text = '~' }, ---@diagnostic disable-line: missing-fields
+      -- Thin bars for added/changed lines; a Nerd Font caret (U+F0DA) marks where lines were removed.
+      add = { text = '▎' }, ---@diagnostic disable-line: missing-fields
+      change = { text = '▎' }, ---@diagnostic disable-line: missing-fields
+      delete = { text = '\u{f0da}' }, ---@diagnostic disable-line: missing-fields
+      topdelete = { text = '\u{f0da}' }, ---@diagnostic disable-line: missing-fields
+      changedelete = { text = '▎' }, ---@diagnostic disable-line: missing-fields
     },
     -- gitsigns.nvim's recommended keymaps:
     on_attach = function(bufnr)
@@ -417,7 +422,8 @@ do
     transparency = true,
     integrations = {
       treesitter = true,
-      telescope = true,
+      telescope = false, -- not installed; pickers are fzf-lua
+      fzf = true,
       diffview = true,
     },
   }
@@ -467,6 +473,23 @@ do
       fg = dark and '#7c6f64' or '#9a9ca5',
       bg = 'NONE',
     })
+
+    if dark then
+      vim.api.nvim_set_hl(0, 'WhichKeyNormal', { bg = '#1d2021', fg = '#ebdbb2' })
+      vim.api.nvim_set_hl(0, 'WhichKeyBorder', { bg = '#1d2021', fg = '#504945' })
+      vim.api.nvim_set_hl(0, 'WhichKeyTitle', { bg = '#1d2021', fg = '#fabd2f', bold = true })
+    else
+      vim.api.nvim_set_hl(0, 'WhichKeyNormal', { bg = '#f0f0f0', fg = '#383a42' })
+      vim.api.nvim_set_hl(0, 'WhichKeyBorder', { bg = '#f0f0f0', fg = '#d0d0d0' })
+    end
+
+    -- Wavy (undercurl) diagnostic underlines; `sp` colours the line, not the text.
+    local diagnostic_colors = dark
+        and { Error = '#fb4934', Warn = '#fabd2f', Info = '#83a598', Hint = '#8ec07c' }
+      or { Error = '#ca1212', Warn = '#c18401', Info = '#0184bc', Hint = '#50a14f' }
+    for severity, color in pairs(diagnostic_colors) do
+      vim.api.nvim_set_hl(0, 'DiagnosticUnderline' .. severity, { undercurl = true, sp = color })
+    end
   end
 
   vim.api.nvim_create_autocmd('ColorScheme', {
@@ -480,14 +503,9 @@ do
   if system_is_dark() then
     vim.o.background = 'dark'
     vim.cmd.colorscheme 'gruvbox'
-    vim.api.nvim_set_hl(0, 'WhichKeyNormal', { bg = '#1d2021', fg = '#ebdbb2' })
-    vim.api.nvim_set_hl(0, 'WhichKeyBorder', { bg = '#1d2021', fg = '#504945' })
-    vim.api.nvim_set_hl(0, 'WhichKeyTitle',  { bg = '#1d2021', fg = '#fabd2f', bold = true })
   else
     vim.o.background = 'light'
     vim.cmd.colorscheme 'onehalflight'
-    vim.api.nvim_set_hl(0, 'WhichKeyNormal', { bg = '#f0f0f0', fg = '#383a42' })
-    vim.api.nvim_set_hl(0, 'WhichKeyBorder', { bg = '#f0f0f0', fg = '#d0d0d0' })
   end
 
 
@@ -556,7 +574,6 @@ do
   -- Set `use_icons` to true if you have a Nerd Font
   statusline.setup {
     use_icons = vim.g.have_nerd_font,
-    laststatus = 3
   }
 
   -- You can configure sections in the statusline by overriding their
@@ -588,6 +605,10 @@ do
   vim.pack.add { gh 'ibhagwan/fzf-lua' }
   local fzf = require 'fzf-lua'
   fzf.setup {
+    -- Derive fzf's own colors from the active colorscheme's highlight groups.
+    fzf_colors = true,
+    -- fzf's list scrollbar leaves stray '│' marks in the float as results stream in.
+    fzf_opts = { ['--no-scrollbar'] = true },
     keymap = {
       builtin = {
         ["<C-d>"] = "preview-page-down",
@@ -631,7 +652,7 @@ do
 
   -- buffer navigation
   vim.keymap.set('n', '<leader><leader>', fzf.buffers, { desc = '[ ] Find existing buffers' })
-  vim.keymap.set('n', '<leader>bb', '<C-^', {
+  vim.keymap.set('n', '<leader>bb', '<C-^>', {
     desc = 'Switch to last buffer visited'
   })
   vim.keymap.set('n', '<S-l>', '<cmd>bnext<CR>', {
@@ -967,7 +988,9 @@ do
     completion = {
       -- By default, you may press `<c-space>` to show the documentation.
       -- Optionally, set `auto_show = true` to show the documentation after a delay.
-      documentation = { auto_show = false, auto_show_delay_ms = 500 },
+      documentation = { auto_show = true, auto_show_delay_ms = 500 },
+      -- Colour completion labels from LSP items with treesitter highlighting.
+      menu = { draw = { treesitter = { 'lsp' } } },
     },
 
     -- VimTeX source for LaTeX files comes from custom.latex.completion
@@ -1027,10 +1050,16 @@ do
   local function treesitter_folds(buf)
     local language = attached_languages[buf]
     if not language or not buffer_has_language(buf, language) then return end
+    local ts_foldexpr = 'v:lua.vim.treesitter.foldexpr()'
     for _, win in ipairs(vim.fn.win_findbuf(buf)) do
-      -- Set only the window-local value, not the default for future buffers.
-      vim.wo[win][0].foldexpr = 'v:lua.vim.treesitter.foldexpr()'
-      vim.wo[win][0].foldmethod = 'expr'
+      -- Respect a fold method chosen elsewhere (modeline, ftplugin, :set): only take
+      -- over the default 'manual', or re-apply our own treesitter expr.
+      local wo = vim.wo[win][0]
+      if wo.foldmethod == 'manual' or (wo.foldmethod == 'expr' and wo.foldexpr == ts_foldexpr) then
+        -- Set only the window-local value, not the default for future buffers.
+        wo.foldexpr = ts_foldexpr
+        wo.foldmethod = 'expr'
+      end
     end
   end
 
