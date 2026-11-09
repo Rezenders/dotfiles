@@ -574,7 +574,17 @@ do
   statusline.section_location = function() return '%2l:%-2v' end
 
   require('mini.statuscolumn').setup()
-  require('mini.tabline').setup()
+  require('mini.tabline').setup({
+    format = function(buf_id, label)
+      local name = MiniTabline.default_format(buf_id, label)
+
+      if vim.bo[buf_id].modified then
+        return name .. ' ●'
+      end
+
+      return name
+    end,
+  })
 end
 
 -- ============================================================
@@ -626,7 +636,18 @@ do
   vim.keymap.set('n', '<leader>sr', fzf.resume, { desc = '[S]earch [R]esume' })
   vim.keymap.set('n', '<leader>s.', fzf.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
   vim.keymap.set('n', '<leader>sc', fzf.commands, { desc = '[S]earch [C]ommands' })
+
+  -- buffer navigation
   vim.keymap.set('n', '<leader><leader>', fzf.buffers, { desc = '[ ] Find existing buffers' })
+  vim.keymap.set('n', '<leader>bb', '<C-^', {
+    desc = 'Switch to last buffer visited'
+  })
+  vim.keymap.set('n', '<S-l>', '<cmd>bnext<CR>', {
+    desc = 'Next buffer',
+  })
+  vim.keymap.set('n', '<S-h>', '<cmd>bprevious<CR>', {
+    desc = 'Previous buffer',
+  })
 
   vim.api.nvim_create_autocmd('LspAttach', {
     group = vim.api.nvim_create_augroup('fzf-lua-lsp-attach', { clear = true }),
