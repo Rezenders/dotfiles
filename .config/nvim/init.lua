@@ -965,6 +965,9 @@ do
 
       local language = vim.treesitter.language.get_lang(filetype)
       if not language then return end
+      -- VimTeX needs its own regex syntax (math detection, conceal, live preview);
+      -- starting treesitter on tex buffers turns that syntax off.
+      if language == 'latex' then return end
 
       local installed_parsers = require('nvim-treesitter').get_installed 'parsers'
 
