@@ -408,86 +408,43 @@ do
   local system_is_dark = require('custom.runtime').system_is_dark
 
   -- [[ Colorscheme ]]
+  -- One theme family per machine (personal vs work), then dark/light from the desktop.
   -- If you want to see what colorschemes are already installed, you can use `:FzfLua colorschemes`.
 
+  -- Work machine: gruvbox, solid background.
   vim.pack.add { gh 'morhetz/gruvbox' }
-
-  -- Gruvbox configuration
   vim.g.gruvbox_contrast_dark = 'medium'
   vim.g.gruvbox_contrast_light = 'medium'
   vim.g.gruvbox_italic = 0
 
-  vim.pack.add { gh 'ClearAspect/onehalf' }
-  require('onehalf').setup {
-    transparency = true,
-    integrations = {
-      treesitter = true,
-      telescope = false, -- not installed; pickers are fzf-lua
-      fzf = true,
-      diffview = true,
-    },
+  -- Personal machine: Kanagawa (dragon = dark, lotus = light), see-through background.
+  vim.pack.add { gh 'rebelot/kanagawa.nvim' }
+  require('kanagawa').setup {
+    transparent = true,
+    -- Gutter (signs, line numbers) uses no background so it blends with the transparent editor.
+    colors = { theme = { all = { ui = { bg_gutter = 'none' } } } },
+    background = { dark = 'dragon', light = 'lotus' },
   }
-  -- High-contrast overrides specifically for 'onehalflight'
-  vim.api.nvim_create_autocmd("ColorScheme", {
-    pattern = "onehalflight",
-    callback = function()
-      -- 1. Sharpen Line Numbers
-      vim.api.nvim_set_hl(0, "LineNr", { fg = "#7c7f8c", bg = "NONE" })
-      vim.api.nvim_set_hl(0, "CursorLineNr", { fg = "#0184bc", bold = true })
-
-      -- 2. Make CursorLine & Selection clearly visible
-      vim.api.nvim_set_hl(0, "CursorLine", { bg = "#f0f0f0" })
-      vim.api.nvim_set_hl(0, "Visual", { bg = "#d0d7e5" })
-
-      -- 3. Enhance Floating Windows & Popups (Telescope, LSP hover, NvimTree)
-      vim.api.nvim_set_hl(0, "NormalFloat", { bg = "#f0f0f0", fg = "#383a42" })
-      vim.api.nvim_set_hl(0, "FloatBorder", { bg = "#e8e8e8", fg = "#4f525e" })
-      vim.api.nvim_set_hl(0, "FloatTitle", { fg = "#0184bc", bold = true })
-
-      -- 4. High-contrast Git Diffs (prevents washed-out diff text)
-      vim.api.nvim_set_hl(0, "DiffAdd", { bg = "#e5f6e8", fg = "#24292e" })
-      vim.api.nvim_set_hl(0, "DiffChange", { bg = "#fff5b1", fg = "#24292e" })
-      vim.api.nvim_set_hl(0, "DiffDelete", { bg = "#ffeef0", fg = "#d73a49" })
-      vim.api.nvim_set_hl(0, "DiffText", { bg = "#ffea7f", fg = "#24292e", bold = true })
-
-      -- 5. Darken LSP Diagnostics for legibility
-      vim.api.nvim_set_hl(0, "DiagnosticError", { fg = "#ca1212", bold = true })
-      vim.api.nvim_set_hl(0, "DiagnosticWarn", { fg = "#c18401", bold = true })
-      vim.api.nvim_set_hl(0, "DiagnosticInfo", { fg = "#0184bc" })
-      vim.api.nvim_set_hl(0, "DiagnosticHint", { fg = "#50a14f" })
-    end,
-  })
 
   local function polish_ui()
-    local dark = vim.o.background == 'dark'
-    vim.api.nvim_set_hl(0, 'WinSeparator', {
-      fg = dark and '#504945' or '#d8d8d8',
-      bg = 'NONE',
-    })
+    vim.api.nvim_set_hl(0, 'SignColumn', { bg = 'NONE' })
 
-    vim.api.nvim_set_hl(0, 'SignColumn', {
-      bg = 'NONE',
-    })
-
-    vim.api.nvim_set_hl(0, 'FoldColumn', {
-      fg = dark and '#7c6f64' or '#9a9ca5',
-      bg = 'NONE',
-    })
-
-    if dark then
+    -- Hand-tuned gruvbox-dark extras (work look, unchanged). Other themes keep their own.
+    if vim.g.colors_name == 'gruvbox' and vim.o.background == 'dark' then
+      vim.api.nvim_set_hl(0, 'WinSeparator', { fg = '#504945', bg = 'NONE' })
+      vim.api.nvim_set_hl(0, 'FoldColumn', { fg = '#7c6f64', bg = 'NONE' })
       vim.api.nvim_set_hl(0, 'WhichKeyNormal', { bg = '#1d2021', fg = '#ebdbb2' })
       vim.api.nvim_set_hl(0, 'WhichKeyBorder', { bg = '#1d2021', fg = '#504945' })
       vim.api.nvim_set_hl(0, 'WhichKeyTitle', { bg = '#1d2021', fg = '#fabd2f', bold = true })
-    else
-      vim.api.nvim_set_hl(0, 'WhichKeyNormal', { bg = '#f0f0f0', fg = '#383a42' })
-      vim.api.nvim_set_hl(0, 'WhichKeyBorder', { bg = '#f0f0f0', fg = '#d0d0d0' })
     end
 
     -- Wavy (undercurl) diagnostic underlines; `sp` colours the line, not the text.
-    local diagnostic_colors = dark
-        and { Error = '#fb4934', Warn = '#fabd2f', Info = '#83a598', Hint = '#8ec07c' }
-      or { Error = '#ca1212', Warn = '#c18401', Info = '#0184bc', Hint = '#50a14f' }
-    for severity, color in pairs(diagnostic_colors) do
+    -- The colour comes from the active theme. morhetz/gruvbox doesn't define the
+    -- Diagnostic* groups, so use its own palette groups there instead.
+    local gruvbox_source = { Error = 'GruvboxRed', Warn = 'GruvboxYellow', Info = 'GruvboxBlue', Hint = 'GruvboxAqua' }
+    for _, severity in ipairs { 'Error', 'Warn', 'Info', 'Hint' } do
+      local source = vim.g.colors_name == 'gruvbox' and gruvbox_source[severity] or ('Diagnostic' .. severity)
+      local color = vim.api.nvim_get_hl(0, { name = source, link = false }).fg
       vim.api.nvim_set_hl(0, 'DiagnosticUnderline' .. severity, { undercurl = true, sp = color })
     end
   end
@@ -497,36 +454,16 @@ do
     callback = polish_ui,
   })
 
-  polish_ui()
-
-  -- Apply colorscheme based on desktop appearance.
-  if system_is_dark() then
-    vim.o.background = 'dark'
-    vim.cmd.colorscheme 'gruvbox'
+  -- `beast` is the personal machine; every other host gets the work theme.
+  local personal = vim.uv.os_gethostname() == 'beast'
+  local dark = system_is_dark()
+  vim.o.background = dark and 'dark' or 'light'
+  if personal then
+    vim.cmd.colorscheme(dark and 'kanagawa-dragon' or 'kanagawa-lotus')
   else
-    vim.o.background = 'light'
-    vim.cmd.colorscheme 'onehalflight'
+    vim.cmd.colorscheme 'gruvbox'
   end
 
-
-  -- One Half clears Diffview's diff groups; restore their standard links.
-  local function restore_diffview_highlights()
-    for group, target in pairs {
-      DiffviewDiffAdd = 'DiffAdd',
-      DiffviewDiffDelete = 'DiffDelete',
-      DiffviewDiffChange = 'DiffChange',
-      DiffviewDiffText = 'DiffText',
-      DiffviewDiffAddAsDelete = 'DiffDelete',
-      DiffviewDiffDeleteDim = 'Comment',
-    } do
-      vim.api.nvim_set_hl(0, group, { link = target })
-    end
-  end
-  vim.api.nvim_create_autocmd('ColorScheme', {
-    group = vim.api.nvim_create_augroup('diffview-theme-highlights', { clear = true }),
-    callback = restore_diffview_highlights,
-  })
-  restore_diffview_highlights()
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }

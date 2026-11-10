@@ -100,3 +100,9 @@ Lua is formatted with stylua (installed via Mason; lua_ls formatting is disabled
 `.stylua.toml` defines the local style; avoid broad formatting passes alongside unrelated changes.
 Markdown formatting respects project Prettier settings; its policy is independent of the MD013 visual guide (see `INTEGRATIONS.md`).
 `.luarc.json` targets LuaJIT and disables `missing-fields` diagnostics.
+
+## Explaining changes
+
+When adding or changing configuration in this workspace, always explain what each
+parameter means: the option or key itself, the value chosen, and why that value was
+picked. This applies to the explanation given to the user, not only to code comments.
