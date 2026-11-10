@@ -1,0 +1,11 @@
+[Unit]
+Description=Automatically switch GNOME Shell themes
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/gnome-dynamic-theme.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

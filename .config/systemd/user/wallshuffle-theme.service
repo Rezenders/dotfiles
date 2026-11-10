@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync Wallshuffle wallpapers with GNOME theme
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/wallshuffle-dynamic-theme.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
