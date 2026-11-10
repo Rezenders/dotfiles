@@ -566,7 +566,7 @@ do
       width = 0.9,
       height = 0.9,
       cursorline = true,
-      path_shorten = 2,
+      -- path_shorten = 2,
       title_pos = 'left',
       preview = {
         layout = 'flex',
@@ -658,15 +658,15 @@ do
   vim.pack.add { gh 'j-hui/fidget.nvim' }
   require('fidget').setup {
     notification = {
-      override_vim_notify = true,
+      -- override_vim_notify = true,
 
-      window = {
-        border = 'rounded',
-        winblend = 0,
-        normal_hl = 'NormalFloat',
-        x_padding = 1,
-        y_padding = 1,
-      },
+      -- window = {
+        -- border = 'rounded',
+        -- winblend = 0,
+        -- normal_hl = 'NormalFloat',
+        -- x_padding = 1,
+        -- y_padding = 1,
+      -- },
     },
   }
 
