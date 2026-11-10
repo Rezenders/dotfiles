@@ -7,9 +7,8 @@ vim.keymap.set('n', '<leader>lf', function()
   }
 end, { buffer = 0, desc = 'Format LaTeX document' })
 
--- spell checking
-vim.opt_local.spell = true
-vim.opt_local.spelllang = 'en_us'
+-- Use LTeX+ for spelling and grammar instead of duplicate built-in highlights.
+vim.opt_local.spell = false
 
 -- Line wrapping
 vim.opt_local.wrap = true
