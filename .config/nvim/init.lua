@@ -173,6 +173,8 @@ do
   -- [[ Basic Autocommands ]]
   --  See `:help lua-guide-autocommands`
 
+  require('custom.file_autocmds').setup()
+
   -- Highlight when yanking (copying) text
   --  Try it with `yap` in normal mode
   --  See `:help vim.hl.on_yank()`

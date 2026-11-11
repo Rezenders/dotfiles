@@ -447,3 +447,51 @@ ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --syntax-ch
 Tests use temporary homes and stub privileged operations and package commands.
 The Pi task tests require `ansible-playbook` on `PATH`. A disposable Ubuntu VM
 is recommended for end-to-end installation testing.
+
+## Workstation doctor
+
+Run the read-only doctor after checkout or when an integration stops working:
+
+```bash
+~/.local/bin/workstation-doctor
+# Equivalent without the launcher:
+python3 ~/.config/workstation/doctor.py
+~/.local/bin/workstation-doctor --help
+~/.local/bin/workstation-doctor --tests
+~/.local/bin/workstation-doctor --strict
+```
+
+The doctor reports the selected `kitty`, `nvim`, `node`, and `pi` executables,
+resolved symlink targets, and shadowed PATH alternatives. Required core tools
+are explicitly labelled; workflow tools and configured language-server commands
+are optional and also searched in Neovim's Mason bin directory. The server list
+mirrors `nvim/init.lua` and `lua/custom/latex/lsp.lua` without loading them.
+LaTeX tools and servers are never required, including on the work profile.
+Font checks inventory installed Nerd Fonts and the configured Kitty font family
+rather than treating a Fontconfig fallback as an exact match.
+
+Configuration checks use Kitty's `load_config` with accumulated bad lines,
+compile `tab_bar.py` without executing it or writing bytecode, and run only
+`loadfile` syntax checks for the local Neovim init, Lua modules, and after-files
+under `nvim --clean`. User-service checks list failed `systemd --user` services;
+a missing user bus/session is a warning, not a failure. Subprocesses have a
+10-second deadline (20 seconds per optional test).
+
+`--tests` runs **only** the existing Neovim `health.lua`, `runtime.lua`, and
+`file_autocmds.lua` tests, with temporary HOME, XDG, and temporary-file directories.
+Missing optional tests are warnings. It does not run the workstation provisioning
+test suite. Neither mode starts normal Neovim init, installs plugins, contacts
+package registries, repairs configuration, updates software, or restarts services.
+The doctor is diagnostic, not a sandbox for untrusted configuration or tests.
+Kitty's parser evaluates configured `geninclude` scripts, so use it only with
+trusted local configuration (the current theme generators only print includes).
+
+Exit status is nonzero for missing required tools, invalid configuration, failed
+user services, or failed optional tests. Warnings are counted in the summary but
+only affect the exit status with `--strict`. Test the doctor itself without real
+subprocesses, network access, or service queries:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
+  -s ~/.config/workstation/tests -p test_doctor.py -v
+```

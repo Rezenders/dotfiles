@@ -54,6 +54,13 @@ LaTeX completion must be set up before `blink.cmp`).
   (smart-splits, kitty-scrollback, image.nvim, dock panes), LaTeX, Pi, Claude Code.
 - Neo-tree is configured inline in Section 10 of `init.lua`; there is no custom plugin-directory loader.
 
+### File conveniences (`lua/custom/file_autocmds.lua`)
+Section 2 registers cursor restoration and missing-parent-directory handling.
+Cursor restoration uses the ShaDa `"` mark, skips special/diff/commit buffers,
+and yields to explicit startup commands and cursor movement. Interactive saves
+ask before creating parents (default No); headless saves never prompt and require
+an explicit `:write!` to create missing parents. URI buffers are excluded.
+
 ### LaTeX (`lua/custom/latex/`)
 Wired into `init.lua` at three load-order-sensitive points:
 `require('custom.latex.lsp').servers()` is merged into the LSP `servers` table (texlab +
@@ -91,6 +98,7 @@ nvim --clean -l tests/line_length.lua   # needs markdownlint (Mason or PATH) + n
 nvim --clean -l tests/ltex_extra.lua    # needs ltex_extra.nvim installed via vim.pack
 nvim --clean -l tests/runtime.lua       # optional integrations and subprocess failure paths
 nvim --clean -l tests/health.lua        # health diagnostics with mocked tools/processes
+nvim --clean -l tests/file_autocmds.lua # cursor restoration and safe parent-directory creation
 kitty +runpy 'import runpy; runpy.run_path("tests/kitty_dock_toggle.py", run_name="__main__")'
 ```
 
