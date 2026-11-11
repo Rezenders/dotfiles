@@ -1,7 +1,7 @@
 from datetime import datetime
 from glob import glob
 from socket import gethostname
-from zoneinfo import ZoneInfo
+from time import monotonic
 
 from kitty.boss import get_boss
 from kitty.fast_data_types import Screen, add_timer
@@ -18,11 +18,16 @@ from kitty.utils import color_as_int
 
 # Machine marker at the far left: flame on the personal machine ('beast'), ship on work.
 # Written as escapes so the Nerd Font glyphs can't be lost by editors/tools.
-MACHINE_ICON = "" if gethostname() == "beast" else ""  # nf-oct-flame / nf-fa-ship
+MACHINE_ICON = "" if gethostname() == "beast" else "󰻈"  # nf-oct-flame / nf-sail-boat
 ICON = f" {MACHINE_ICON} "
 RIGHT_MARGIN = 1
 # Seconds between forced redraws, so the clock and battery stay current.
 REFRESH_TIME = 15
+# Delay in seconds before hiding the battery icon once fully charged while plugged in.
+BATTERY_FULL_DELAY = 300
+_battery_full_since: float | None = None
+_battery_was_charging: bool = False
+
 
 # Nerd Font battery glyphs: 10%, 20%, ... 90%, full; and the charging glyph.
 BATTERY_LEVELS = [
@@ -53,7 +58,9 @@ def _redraw_tab_bar(_timer_id) -> None:
 
 
 def _battery() -> str:
-    """Battery glyph and percentage, or '' on machines without a battery."""
+    """Battery glyph and percentage, or '' when full/hidden or on machines without a battery."""
+    global _battery_full_since, _battery_was_charging
+
     for path in sorted(glob("/sys/class/power_supply/BAT*")):
         try:
             with open(f"{path}/capacity") as f:
@@ -62,6 +69,32 @@ def _battery() -> str:
                 status = f.read().strip()
         except (OSError, ValueError):
             continue
+
+        is_plugged = status != "Discharging"
+        is_full = capacity >= 100 or status == "Full"
+
+        if not is_plugged:
+            # Running on battery: always show
+            _battery_was_charging = False
+            _battery_full_since = None
+        elif not is_full:
+            # Plugged in but charging: always show
+            _battery_was_charging = True
+            _battery_full_since = None
+        else:
+            # Plugged in and full
+            if _battery_was_charging:
+                now = monotonic()
+                if _battery_full_since is None:
+                    _battery_full_since = now
+
+                # 5-minute grace period after reaching full charge
+                if now - _battery_full_since >= BATTERY_FULL_DELAY:
+                    return ""
+            else:
+                # Started kitty or plugged in when already full
+                return ""
+
         if status == "Charging":
             icon = BATTERY_CHARGING
         else:
@@ -123,14 +156,15 @@ def _draw_right_status(draw_data: DrawData, screen: Screen, is_last: bool) -> in
 
     draw_attributed_string(Formatter.reset, screen)
 
-    clock = datetime.now().strftime("%H:%M")
-    nl_time = datetime.now(ZoneInfo("Europe/Amsterdam")).strftime(" (NL %H:%M)")
+    now = datetime.now()
+    clock = now.strftime("%H:%M")
+    date = now.strftime("%d.%m.%y")
 
     # (colour, text): colours come from the active theme's tab colours.
     cells = [
         (_rgb(draw_data.inactive_fg), _battery()),
         (_rgb(draw_data.active_fg), clock),
-        (_rgb(draw_data.inactive_fg), nl_time),
+        (_rgb(draw_data.inactive_fg), f"  {date}"),
     ]
 
     right_status_length = RIGHT_MARGIN
