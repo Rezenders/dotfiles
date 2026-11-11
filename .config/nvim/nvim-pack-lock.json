@@ -87,6 +87,10 @@
       "rev": "84d37a68b5858bafe75573f8ea6898ba095fef45",
       "src": "https://github.com/iurimateus/luasnip-latex-snippets.nvim"
     },
+    "markview.nvim": {
+      "rev": "aadb6d817577d553bbef61e8b9073f1bf4b87e08",
+      "src": "https://github.com/OXY2DEV/markview.nvim"
+    },
     "mason-lspconfig.nvim": {
       "rev": "00b5473cca4db5b410ff4bae724e3b6e21f2687f",
       "src": "https://github.com/mason-org/mason-lspconfig.nvim"

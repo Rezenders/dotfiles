@@ -31,9 +31,6 @@ do
   vim.o.linebreak = true
   vim.o.breakindent = true
 
-  -- Enable undo/redo changes even after closing and reopening a file
-  vim.o.undofile = true
-
   -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
   vim.o.ignorecase = true
   vim.o.smartcase = true
@@ -82,15 +79,22 @@ do
   vim.opt.termguicolors = true
   -- END
 
-  vim.opt.fillchars = {
-     vert = '│',       -- thin solid vertical split divider
-     horiz = '─',      -- thin solid horizontal split divider
-     eob = ' ',        -- hide the '~' characters on lines past end-of-buffer
-     fold = ' ',       -- cleaner fold filler
-     diff = '╱',       -- cleaner diff fillers
-  }
   -- vim.o.pumblend = 10 -- transparency for popup menu / completions (0-100)
   -- vim.o.winblend = 10  -- keep at 0 if you prefer crisp contrast, or 5-10 for subtle float glass effect
+
+  -- Native Neovim undo tree
+  vim.cmd.packadd('nvim.undotree')
+
+  -- Persist undo history across Neovim sessions
+  vim.o.undofile = true
+
+  -- Maximum number of undo changes
+  vim.o.undolevels = 10000
+
+  -- Toggle undo tree
+  vim.keymap.set('n', '<leader>u', '<cmd>Undotree<CR>', {
+    desc = 'Toggle undo tree',
+  })
 end
 
 -- ============================================================
@@ -871,6 +875,21 @@ do
   vim.keymap.set('n', '<leader>mf', function()
     require('conform').format { async = true }
   end, { desc = 'Format document' })
+
+  vim.pack.add({
+    'https://github.com/OXY2DEV/markview.nvim',
+  })
+
+  require('markview').setup({})
+
+  -- Toggle Markdown rendering
+  vim.keymap.set('n', '<leader>mp', '<cmd>Markview<cr>',
+    { desc = 'Toggle Markdown preview' })
+
+  -- Toggle side-by-side Markdown preview
+  vim.keymap.set('n', '<leader>ms', '<cmd>Markview splitToggle<cr>',
+    { desc = 'Toggle Markdown split preview' })
+
 end
 
 -- ============================================================
