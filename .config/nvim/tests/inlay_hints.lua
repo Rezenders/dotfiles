@@ -1,6 +1,6 @@
 -- Run from the config directory: nvim --clean -l tests/inlay_hints.lua
 -- Load the actual LspAttach configuration without installing plugins or servers.
-local source = table.concat(vim.fn.readfile 'init.lua', '\n')
+local source = table.concat(vim.fn.readfile 'lua/custom/plugins/lsp.lua', '\n')
 local attach = assert(source:match("(  vim%.api%.nvim_create_autocmd%('LspAttach', {\n    group = vim%.api%.nvim_create_augroup%('kickstart%-lsp%-attach'.-)\n\n  %-%- Enable the following language servers"))
 local client_id = 123
 ---@diagnostic disable-next-line: duplicate-set-field

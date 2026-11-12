@@ -22,14 +22,15 @@ end
 
 local function check_tools()
   vim.health.start 'Core, Markdown and images'
-  for _, exe in ipairs { 'git', 'make', 'unzip', 'rg', 'cc', 'fzf', 'node', 'npm', 'prettier', 'markdownlint', 'magick' } do
+  for _, exe in ipairs { 'git', 'make', 'unzip', 'rg', 'cc', 'fzf', 'node', 'npm', 'prettier', 'stylua', 'ruff', 'markdownlint', 'magick' } do
     executable(exe, 'Configured tool')
   end
   vim.health.info 'Mason tools are checked on Neovim’s PATH after Mason setup. Run :Mason to install missing managed tools.'
-  vim.health.info 'Markdown: Prettier uses project configuration; the column guide uses markdownlint MD013. Keep those project policies aligned.'
+  vim.health.info 'Manual formatting: <leader>cf (<leader>mf alias), :ConformInfo for tool availability. Ruby prefers project bin/rubocop or bundle exec rubocop; LaTeX uses TexLab/latexindent.'
+  vim.health.info 'Markdown: Prettier and markdownlint use their own project configuration; smartcolumn uses EditorConfig max_line_length (80-column fallback). Keep those project policies aligned.'
 
-  vim.health.start 'LaTeX and Go debugging (optional per workflow)'
-  for _, exe in ipairs { 'latexmk', 'pdflatex', 'chktex', 'latexindent', 'zathura', 'go', 'dlv' } do
+  vim.health.start 'LaTeX (optional per workflow)'
+  for _, exe in ipairs { 'latexmk', 'pdflatex', 'chktex', 'latexindent', 'zathura' } do
     executable(exe, 'Workflow tool')
   end
 end
@@ -106,7 +107,7 @@ local function check_pi()
 end
 
 function M.check()
-  vim.health.start 'kickstart.nvim'
+  vim.health.start 'custom Neovim configuration'
   vim.health.info 'Workflow-specific warnings are optional: install tools only for integrations you use.'
   vim.health.info('System Information: ' .. vim.inspect(vim.uv.os_uname()))
   check_version()

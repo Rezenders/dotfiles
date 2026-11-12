@@ -2,7 +2,7 @@
 -- This test deliberately replaces and restores LSP API functions.
 ---@diagnostic disable: duplicate-set-field
 -- Load the actual LspAttach registration without starting servers or plugins.
-local source = table.concat(vim.fn.readfile 'init.lua', '\n')
+local source = table.concat(vim.fn.readfile 'lua/custom/plugins/lsp.lua', '\n')
 local section = assert(source:match("(  vim%.api%.nvim_create_autocmd%('LspAttach', {\n    group = vim%.api%.nvim_create_augroup%('kickstart%-lsp%-attach'.-)\n\n  %-%- Enable the following language servers"))
 assert(loadstring(section))()
 

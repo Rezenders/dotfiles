@@ -1,9 +1,10 @@
 -- Run from the config directory: nvim --clean -l tests/lsp_capabilities.lua
 -- Exercise the actual LSP registration block without installing plugins/servers.
 vim.opt.runtimepath:prepend(vim.fn.getcwd())
-local source = table.concat(vim.fn.readfile 'init.lua', '\n')
+local init = table.concat(vim.fn.readfile 'init.lua', '\n')
+local source = table.concat(vim.fn.readfile 'lua/custom/plugins/lsp.lua', '\n')
 assert(loadfile 'init.lua') -- Check the full configuration's Lua syntax too.
-local registration = assert(source:match("(  vim%.pack%.add {\n    gh 'neovim/nvim%-lspconfig'.-)\nend\n\n%-%- Markdown formatting"))
+local registration = assert(source:match("(  vim%.pack%.add {\n    gh 'neovim/nvim%-lspconfig'.-)\nend\n\nreturn M"))
 local blink_path = vim.fn.stdpath 'data' .. '/site/pack/core/opt/blink.cmp'
 assert(vim.fn.isdirectory(blink_path) == 1, 'Install blink.cmp via vim.pack to run these tests')
 local added_blink = false
@@ -45,7 +46,7 @@ local env = setmetatable({
 local chunk = assert(loadstring(registration))
 setfenv(chunk, env)()
 assert(enabled == 2, 'All configured servers must be enabled')
-local health_servers = require('kickstart.health').lsp_servers
+local health_servers = require('custom.health').lsp_servers
 assert(#health_servers == 2 and vim.list_contains(health_servers, 'guide_test')
   and vim.list_contains(health_servers, 'guide_override'), 'Health must check the configured servers')
 assert(vim.lsp.config.guide_test.settings.keep == true, 'Server settings must be retained')
@@ -54,6 +55,8 @@ assert(vim.deep_equal(vim.lsp.config.guide_test.capabilities, blink.get_lsp_capa
   'Default server capabilities must match Blink plus Neovim defaults')
 local _, registrations = source:gsub("gh 'saghen/blink%.cmp'", '')
 assert(registrations == 1, 'Blink should be registered exactly once')
-assert(source:find("require('blink.cmp').setup", source:find('%-%- SECTION 8:', 1)),
-  'Blink UI setup must remain in the completion section')
+assert(init:find("require('custom.plugins.completion').setup()", init:find('%-%- SECTION 8:', 1), true),
+  'Completion setup must remain in section 8')
+local completion = table.concat(vim.fn.readfile 'lua/custom/plugins/completion.lua', '\n')
+assert(completion:find("require('blink.cmp').setup", 1, true), 'Blink UI setup must remain in the completion module')
 print 'LSP capability regression tests passed'

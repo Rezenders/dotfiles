@@ -1,6 +1,6 @@
 -- Run from the config directory: nvim --clean -l tests/diagnostic_list.lua
 -- Exercise the actual mapping without loading plugins or language servers.
-local source = table.concat(vim.fn.readfile 'init.lua', '\n')
+local source = table.concat(vim.fn.readfile 'lua/custom/keymaps.lua', '\n')
 local mapping = assert(source:match("  vim%.keymap%.set%('n', '<leader>q', function%(%)\n.-excluding LTeX%+%)' }%)"))
 assert(loadstring(mapping))()
 local callback

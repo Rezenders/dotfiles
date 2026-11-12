@@ -1,11 +1,7 @@
 -- Buffer-local settings for LaTeX buffers (runs after VimTeX's ftplugin).
 
-vim.keymap.set('n', '<leader>lf', function()
-  vim.lsp.buf.format {
-    async = true,
-    filter = function(client) return client.name == 'texlab' end,
-  }
-end, { buffer = 0, desc = 'Format LaTeX document' })
+vim.keymap.set('n', '<leader>lf', require('custom.plugins.formatting').format,
+  { buffer = 0, desc = 'Format LaTeX document (alias)' })
 
 -- Use LTeX+ for spelling and grammar instead of duplicate built-in highlights.
 vim.opt_local.spell = false

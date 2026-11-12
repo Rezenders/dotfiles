@@ -177,6 +177,10 @@
       "rev": "69ab668d96b54fa15907ac3245548fd8a3ce2318",
       "src": "https://github.com/smart-splits-nvim/smart-splits.nvim"
     },
+    "smartcolumn.nvim": {
+      "rev": "3a760dc239de71264072f829a184aafcf7d4d3e7",
+      "src": "https://github.com/m4xshen/smartcolumn.nvim"
+    },
     "telescope-fzf-native.nvim": {
       "rev": "b25b749b9db64d375d782094e2b9dce53ad53a40",
       "src": "https://github.com/nvim-telescope/telescope-fzf-native.nvim"

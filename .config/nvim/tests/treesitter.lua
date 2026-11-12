@@ -1,7 +1,7 @@
 -- Run from the config directory: nvim --clean -l tests/treesitter.lua
--- Exercise the real setup section without downloading plugins or loading parsers.
-local source = table.concat(vim.fn.readfile 'init.lua', '\n')
-local section = assert(source:match('(do\n  vim%.pack%.add { { src = gh \'nvim%-treesitter/nvim%-treesitter\'.-)\n%-%- =+\n%-%- SECTION 10:'))
+-- Exercise the real module without downloading plugins or loading parsers.
+vim.opt.runtimepath:prepend(vim.fn.getcwd())
+assert(loadfile 'init.lua')
 local pending, starts = {}, {}
 vim.pack.add = function() end
 package.loaded['nvim-treesitter'] = {
@@ -20,7 +20,7 @@ end
 vim.treesitter.query.get = function(language)
   return language == 'lua' and {} or nil
 end
-assert(loadstring('local gh = function(repo) return repo end\n' .. section))()
+require('custom.plugins.treesitter').setup()
 
 local indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
 local foldexpr = 'v:lua.vim.treesitter.foldexpr()'
