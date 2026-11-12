@@ -69,7 +69,7 @@ ltex_plus), `require('custom.latex.completion').setup()` runs before blink.cmp, 
 tex options/keymaps live in `after/ftplugin/tex.lua`. `ltex_extra.lua` is a local
 workaround for an upstream ltex_extra.nvim bug — keep the fix here, not in the plugin checkout.
 
-### Kitty docks
+### Kitty docks (`lua/custom/kitty_docks.lua`)
 Neovim runs inside kitty and toggles side "dock" windows (Yazi, Claude, Pi) via
 `kitten @ launch --type=tab-dock`, tagging them with the user var `nvim_dock`. Hiding a
 dock calls `kitty/dock_toggle.py` (a kitten using kitty internal APIs) to park the window
