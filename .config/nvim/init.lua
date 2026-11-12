@@ -400,6 +400,26 @@ do
   vim.keymap.set('n', '<leader>gq', '<cmd>DiffviewClose<CR>', { desc = 'Git: close diff review' })
   vim.keymap.set('n', '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', { desc = 'Git: current file history' })
 
+  -- Generate and copy/open Git permalinks and blame links.
+  vim.pack.add { gh 'linrongbin16/gitlinker.nvim' }
+  require('gitlinker').setup()
+  do
+    local gitlinker = require 'gitlinker'
+    local actions = require 'gitlinker.actions'
+
+    local function keymap(lhs, opts, desc)
+      vim.keymap.set({ 'n', 'v' }, lhs, function() gitlinker.link(opts) end, { silent = true, desc = desc })
+    end
+
+    -- browse
+    keymap('<leader>gl', {}, 'Copy git permalink')
+    keymap('<leader>gL', { action = actions.open }, 'Open git permalink')
+
+    -- blame
+    keymap('<leader>gb', { router_type = 'blame' }, 'Copy git blame link')
+    keymap('<leader>gB', { router_type = 'blame', action = actions.open }, 'Open git blame link')
+  end
+
   -- Useful plugin to show you pending keybinds.
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {
@@ -414,7 +434,7 @@ do
     spec = {
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
-      { '<leader>g', group = '[G]it' },
+      { '<leader>g', group = '[G]it', mode = { 'n', 'v' } },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
