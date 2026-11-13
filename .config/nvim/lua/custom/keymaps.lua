@@ -83,9 +83,9 @@ function M.setup()
   vim.keymap.set('n', '<C-/>', 'gcc', { remap = true, desc = 'Toggle comment' })
   vim.keymap.set('x', '<C-/>', 'gc', { remap = true, desc = 'Toggle comment' })
 
-  vim.keymap.set("n", "<leader>x", "<cmd>bd<CR>", {
-    desc = "Close current buffer",
-  })
+  vim.keymap.set('n', '<leader>x', function()
+    require('mini.bufremove').delete(0, false)
+  end, { desc = 'Close current buffer (preserve layout)' })
 end
 
 return M

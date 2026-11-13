@@ -22,7 +22,10 @@ require('custom.autocmds').setup()
 assert(vim.g.mapleader == ' ' and vim.g.maplocalleader == ' ')
 assert(vim.o.undofile and vim.o.undolevels == 10000 and commands[1] == 'packadd nvim.undotree')
 assert(vim.fn.maparg(' u', 'n'):lower() == '<cmd>undotree<cr>')
-assert(vim.fn.maparg(' x', 'n'):lower() == '<cmd>bd<cr>')
+local deletion
+package.loaded['mini.bufremove'] = { delete = function(buf, force) deletion = { buf, force } end }
+vim.fn.maparg(' x', 'n', false, true).callback()
+assert(vim.deep_equal(deletion, { 0, false }), 'Buffer deletion must preserve layout without forcing')
 assert(vim.fn.maparg('<C-/>', 'n') == 'gcc' and vim.fn.maparg('<C-/>', 'x') == 'gc')
 assert(file_setup, 'File conveniences must be registered')
 local diagnostics = vim.diagnostic.config()

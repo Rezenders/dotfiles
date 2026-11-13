@@ -55,6 +55,25 @@ function M.setup()
   -- - sr)'  - [S]urround [R]eplace [)] [']
   require('mini.surround').setup()
 
+  -- Delete buffers without closing their windows; unsaved changes require confirmation.
+  require('mini.bufremove').setup()
+  -- gS toggles the argument list/table under the cursor between one and many lines.
+  require('mini.splitjoin').setup()
+  -- Keep Alt-h/j/k/l available for Kitty-aware split resizing.
+  require('mini.move').setup {
+    mappings = {
+      left = '<leader>mh',
+      right = '<leader>ml',
+      down = '<leader>mj',
+      up = '<leader>mk',
+      line_left = '<leader>mh',
+      line_right = '<leader>ml',
+      line_down = '<leader>mj',
+      line_up = '<leader>mk',
+    },
+    options = { reindent_linewise = true },
+  }
+
   vim.pack.add { gh 'windwp/nvim-autopairs' }
   require('nvim-autopairs').setup {}
 end

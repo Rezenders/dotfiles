@@ -39,9 +39,22 @@ assert(vim.deep_equal(blink.keymap, { preset = 'default' }))
 assert(blink.appearance.nerd_font_variant == 'mono')
 assert(vim.deep_equal(blink.completion.documentation, { auto_show = true, auto_show_delay_ms = 500 }))
 assert(vim.deep_equal(blink.completion.menu.draw.treesitter, { 'lsp' }))
-assert(vim.deep_equal(blink.sources.default, { 'lsp', 'path', 'snippets' }))
+assert(vim.deep_equal(blink.sources.default, { 'lsp', 'path', 'snippets', 'buffer' }))
+assert(
+  vim.deep_equal(blink.sources.providers.buffer, { min_keyword_length = 3, score_offset = -3 }),
+  'Buffer words must require three characters and use a lower score bias than LSP'
+)
+assert(
+  blink.sources.min_keyword_length == nil and blink.sources.providers.lsp == nil,
+  'Keep the global keyword threshold and Blink LSP/fallback defaults unchanged'
+)
 local latex = require 'custom.latex.completion'
 assert(vim.deep_equal(blink.sources.per_filetype, latex.blink_sources.per_filetype))
-assert(vim.deep_equal(blink.sources.providers, latex.blink_sources.providers))
+assert(
+  vim.deep_equal(blink.sources.per_filetype.tex, { 'vimtex', inherit_defaults = true }),
+  'LaTeX must retain VimTeX and inherit the default sources, including buffer words'
+)
+assert(vim.deep_equal(blink.sources.providers.vimtex, latex.blink_sources.providers.vimtex))
+assert(latex.blink_sources.providers.buffer == nil, 'Merging must not mutate the LaTeX provider table')
 assert(blink.snippets.preset == 'luasnip' and blink.fuzzy.implementation == 'prefer_rust' and blink.signature.enabled)
-print 'Completion tests passed: startup order, plugin declarations, snippet/LaTeX bridge sequencing, preserved Blink options'
+print 'Completion tests passed: startup order, conservative buffer fallback, snippet/LaTeX bridge sequencing, preserved Blink options'

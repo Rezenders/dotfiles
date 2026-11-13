@@ -69,7 +69,13 @@ function M.setup()
 
     -- VimTeX source for LaTeX files comes from custom.latex.completion
     sources = vim.tbl_deep_extend('error', {
-      default = { 'lsp', 'path', 'snippets' },
+      default = { 'lsp', 'path', 'snippets', 'buffer' },
+      providers = {
+        buffer = {
+          min_keyword_length = 3, -- Keep short prefixes quiet, including manual completion.
+          score_offset = -3, -- Penalize buffer words relative to LSP's default score (0).
+        },
+      },
     }, latex_completion.blink_sources),
 
     snippets = { preset = 'luasnip' },
