@@ -70,6 +70,22 @@ end
 check_highlights()
 vim.cmd.colorscheme(theme)
 check_highlights() -- The ColorScheme callback survives initial setup.
+-- Real theme plugins must switch both ways and retain polished highlights.
+local switches = 0
+vim.api.nvim_create_autocmd('ColorScheme', { callback = function() switches = switches + 1 end })
+for _, mode in ipairs { 'light', 'dark', dark and 'dark' or 'light' } do
+  local rgb = mode == 'dark' and '0000/0000/0000' or 'ffff/ffff/ffff'
+  local function respond()
+    vim.api.nvim_exec_autocmds('TermResponse', { data = { sequence = '\027]11;rgb:' .. rgb } })
+  end
+  respond()
+  assert(vim.o.background == mode, 'Terminal response must select background')
+  if host == 'beast' then assert(require('kanagawa')._CURRENT_THEME == (mode == 'dark' and 'dragon' or 'lotus')) end
+  check_highlights()
+  local before = switches
+  respond()
+  assert(switches == before, 'Repeated terminal responses must not reload the theme')
+end
 assert(vim.fn.maparg(' gd', 'n'):lower() == '<cmd>diffviewopen<cr>')
 assert(vim.fn.maparg(' gq', 'n'):lower() == '<cmd>diffviewclose<cr>')
 for _, key in ipairs { ' gl', ' gL', ' gb', ' gB' } do

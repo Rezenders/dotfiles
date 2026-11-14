@@ -12,33 +12,33 @@ function M.setup()
     },
   })
 
-  -- [[ Image support ]]
-  vim.pack.add {
-    { src = 'https://github.com/3rd/image.nvim' },
-  }
+  vim.pack.add({
+    { src = 'https://github.com/folke/snacks.nvim' },
+  })
+  require('snacks').setup({
+    image = {
+      enabled = vim.env.KITTY_SCROLLBACK_NVIM ~= 'true',
 
-  -- Avoid image rendering conflicts in kitty-scrollback's Neovim instance.
-  if vim.env.KITTY_SCROLLBACK_NVIM ~= 'true' then
-    require('image').setup {
-      backend = 'kitty',
-      processor = 'magick_cli',
-
-      integrations = {
-        markdown = {
-          enabled = true,
-          clear_in_insert_mode = false,
-          download_remote_images = false,
-          only_render_image_at_cursor = false,
-          filetypes = { 'markdown' },
-        },
+      doc = {
+        enabled = true,
+        inline = true,
+        float = true,
+        max_width = 80,
+        max_height = 40,
+        conceal = function(_, kind)
+          return kind == 'math'
+        end,
       },
 
-      max_width = 100,
-      max_height = 30,
-      max_width_window_percentage = 100,
-      max_height_window_percentage = 50,
-    }
-  end
+      math = {
+        enabled = true,
+      },
+    },
+  })
+  vim.keymap.set('n', '<leader>ip', function()
+    Snacks.image.hover()
+  end, { desc = 'Preview image or equation' })
+
   -- [[ Smart Splits ]]
   vim.pack.add {
     { src = 'https://github.com/smart-splits-nvim/smart-splits.nvim' },

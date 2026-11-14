@@ -23,11 +23,8 @@ function M.setup()
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
   }
-  -- Desktop appearance is optional and bounded; light is the fallback.
-  local system_is_dark = require('custom.runtime').system_is_dark
-
   -- [[ Colorscheme ]]
-  -- One theme family per machine (personal vs work), then dark/light from the desktop.
+  -- One theme family per machine, following the terminal's light/dark background.
   -- If you want to see what colorschemes are already installed, you can use `:FzfLua colorschemes`.
 
   -- Work machine: gruvbox, solid background.
@@ -74,14 +71,7 @@ function M.setup()
   })
 
   -- `beast` is the personal machine; every other host gets the work theme.
-  local personal = vim.uv.os_gethostname() == 'beast'
-  local dark = system_is_dark()
-  vim.o.background = dark and 'dark' or 'light'
-  if personal then
-    vim.cmd.colorscheme(dark and 'kanagawa-dragon' or 'kanagawa-lotus')
-  else
-    vim.cmd.colorscheme 'gruvbox'
-  end
+  require('custom.appearance').setup(vim.uv.os_gethostname() == 'beast')
 
 
   -- Indentation guides use the plugin defaults.
