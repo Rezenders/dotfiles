@@ -2,6 +2,25 @@
 local M = {}
 
 function M.setup()
+  -- Native gx treats the colon in SCP-style addresses as a filename separator.
+  local default_gx = vim.fn.maparg('gx', 'n', false, true).callback
+  vim.keymap.set('n', 'gx', function()
+    local line = vim.api.nvim_get_current_line()
+    local col = vim.api.nvim_win_get_cursor(0)[2] + 1
+    local offset = 1
+    while true do
+      local first, last, repo = line:find('git@github%.com:([%w_.-]+/[%w_.-]+)', offset)
+      if not first then break end
+      if col >= first and col <= last then
+        local _, err = vim.ui.open('https://github.com/' .. repo:gsub('%.git$', ''))
+        if err then vim.notify(err, vim.log.levels.ERROR) end
+        return
+      end
+      offset = last + 1
+    end
+    default_gx()
+  end, { desc = 'Open URL or GitHub SSH repository under cursor' })
+
   -- Toggle undo tree
   vim.keymap.set('n', '<leader>u', '<cmd>Undotree<CR>', {
     desc = 'Toggle undo tree',

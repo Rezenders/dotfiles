@@ -36,6 +36,8 @@ local source = table.concat(vim.fn.readfile 'init.lua', '\n')
 local section = assert(source:match("(require%('custom%.plugins%.ui'%).setup%(%)\nrequire%('custom%.plugins%.editing'%).setup%(%)\nrequire%('custom%.plugins%.git'%).setup%(%))"))
 -- Check the boundary before executing the actual startup sequence.
 require('custom.plugins.ui').setup()
+assert(not require('snacks').did_setup, 'UI must leave global Snacks setup to the Kitty integration')
+assert(vim.ui.input == require('snacks').input.input, 'Snacks must replace vim.ui.input')
 assert(not package.loaded.gitsigns and not package.loaded['diffview'] and not package.loaded.gitlinker)
 assert(not package.loaded['mini.ai'] and not package.loaded['mini.surround'])
 local scope = require('ibl.config').config.scope

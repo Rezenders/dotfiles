@@ -1,5 +1,6 @@
 -- kitty configuration, explicitly initialized from init.lua.
 local M = {}
+local snacks_doc_filtered = false
 
 local function gh(repo) return 'https://github.com/' .. repo end
 
@@ -15,7 +16,49 @@ function M.setup()
   vim.pack.add({
     { src = 'https://github.com/folke/snacks.nvim' },
   })
+  -- Snacks has no per-buffer math switch. Filter discovery results so both
+  -- inline and hover previews keep images, but leave TeX equations to VimTeX.
+  if not snacks_doc_filtered then
+    local doc = require 'snacks.image.doc'
+    local find = doc.find
+    doc.find = function(buf, cb, opts)
+      return find(buf, function(matches)
+        if not vim.api.nvim_buf_is_valid(buf) then return cb({}) end
+        if vim.bo[buf].filetype == 'tex' then
+          matches = vim.tbl_filter(function(match) return match.type ~= 'math' end, matches)
+        end
+        cb(matches)
+      end, opts)
+    end
+    snacks_doc_filtered = true
+  end
   require('snacks').setup({
+    dashboard = {
+      enabled = true,
+      width = 60,
+      preset = {
+        -- Keep Snacks' default ASCII-art header.
+        keys = {
+          { icon = ' ', key = 'f', desc = 'Find File', action = function() require('fzf-lua').files() end },
+          { icon = ' ', key = 'n', desc = 'New File', action = ':ene | startinsert' },
+          { icon = ' ', key = 'g', desc = 'Find Text', action = function() require('fzf-lua').live_grep() end },
+          { icon = ' ', key = 'r', desc = 'Recent Files', action = function() require('fzf-lua').oldfiles() end },
+          {
+            icon = ' ',
+            key = 'c',
+            desc = 'Neovim Config',
+            action = function() require('fzf-lua').files { cwd = vim.fn.stdpath 'config' } end,
+          },
+          { icon = ' ', key = 'q', desc = 'Quit', action = ':qa' },
+        },
+      },
+      sections = {
+        { section = 'header', padding = 1 },
+        { section = 'keys', gap = 1, padding = 1 },
+        { section = 'recent_files', title = 'Recent Files', icon = ' ', limit = 5, indent = 2, padding = 1 },
+        { section = 'projects', title = 'Projects', icon = ' ', limit = 4, indent = 2, padding = 1, session = false },
+      },
+    },
     image = {
       enabled = vim.env.KITTY_SCROLLBACK_NVIM ~= 'true',
 

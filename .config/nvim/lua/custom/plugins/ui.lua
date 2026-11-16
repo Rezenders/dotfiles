@@ -4,6 +4,11 @@ local M = {}
 local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
+  -- Floating prompts for vim.ui.input (for example, LSP rename).
+  vim.pack.add { gh 'folke/snacks.nvim' }
+  -- Global Snacks setup (including images) lives in custom.integrations.kitty.
+  require('snacks').input.enable()
+
   -- Useful plugin to show you pending keybinds.
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {

@@ -28,6 +28,23 @@ vim.fn.maparg(' x', 'n', false, true).callback()
 assert(vim.deep_equal(deletion, { 0, false }), 'Buffer deletion must preserve layout without forcing')
 assert(vim.fn.maparg('<C-/>', 'n') == 'gcc' and vim.fn.maparg('<C-/>', 'x') == 'gc')
 assert(file_setup, 'File conveniences must be registered')
+
+-- Exercise gx extraction, not just URL conversion (native gx splits at the colon).
+local original_open = vim.ui.open
+local opened = {}
+vim.ui.open = function(path) opened[#opened + 1] = path end
+local ssh = 'git@github.com:kas-lab/ros_monitors.git'
+local line = "Clone '" .. ssh .. "' or https://example.com"
+vim.api.nvim_buf_set_lines(0, 0, -1, false, { line })
+for col = 7, 7 + #ssh - 1 do
+  vim.api.nvim_win_set_cursor(0, { 1, col })
+  vim.api.nvim_feedkeys('gx', 'xt', false)
+  assert(opened[#opened] == 'https://github.com/kas-lab/ros_monitors', 'gx must extract the full SSH address')
+end
+vim.api.nvim_win_set_cursor(0, { 1, #line - 1 })
+vim.api.nvim_feedkeys('gx', 'xt', false)
+assert(opened[#opened] == 'https://example.com', 'gx must preserve native URL handling')
+vim.ui.open = original_open
 local diagnostics = vim.diagnostic.config()
 assert(not diagnostics.virtual_text and not diagnostics.virtual_lines and diagnostics.underline)
 assert(#vim.api.nvim_get_autocmds { event = 'TextYankPost', group = 'kickstart-highlight-yank' } == 1)
