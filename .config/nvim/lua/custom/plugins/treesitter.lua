@@ -10,6 +10,7 @@ function M.setup()
   local parsers = {
       'bash',
       'c',
+      'cpp',
       'diff',
       'html',
       'lua',
@@ -18,7 +19,10 @@ function M.setup()
       'markdown_inline',
       'query',
       'vim',
-      'vimdoc'
+      'vimdoc',
+      'latex',
+      'ruby',
+      'rust'
   }
   require('nvim-treesitter').install(parsers)
 

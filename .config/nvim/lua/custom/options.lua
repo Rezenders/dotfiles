@@ -94,6 +94,13 @@ function M.setup()
   -- Maximum number of undo changes
   vim.o.undolevels = 10000
 
+  -- 1. Tell Neovim where to look
+  -- Adding "**" makes Neovim search recursively down into subdirectories
+  vim.opt.path:append("**")
+
+  -- 2. Tell Neovim which extensions to guess if they are missing
+  -- If you type 'myfile' without '.md', Neovim will check for 'myfile.md', 'myfile.lua', etc.
+  vim.opt.suffixesadd:prepend({ ".rb", ".md", ".lua", ".js", ".ts" })
 
 end
 

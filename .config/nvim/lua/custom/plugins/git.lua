@@ -93,7 +93,7 @@ function M.setup()
   vim.keymap.set('n', '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', { desc = 'Git: current file history' })
 
   -- Generate and copy/open Git permalinks and blame links.
-  vim.pack.add { gh 'linrongbin16/gitlinker.nvim' }
+  vim.pack.add { 'https://github.com/linrongbin16/gitlinker.nvim' }
   require('gitlinker').setup()
   do
     local gitlinker = require 'gitlinker'
