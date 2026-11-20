@@ -137,8 +137,7 @@ ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
 Check mode cannot fully simulate a fresh installation. New apt sources cannot be
 refreshed, so their packages may not be found. npm installations, Pi package
 commands, vendor installers, and service changes are skipped. Pi setup is deferred
-when Node.js or npm is absent. Diffs can expose configuration; do not publish
-sensitive output.
+when Node.js or npm is absent. 
 
 Task tags are `repositories`, `packages`, `applications`, `tree_sitter`, `zoxide`, `tdf`, `pi`,
 `betterleaks`, `yazi`, `docker`, and `services`. Docker and Yazi require their apt sources to be
@@ -284,10 +283,6 @@ specification with a version, and use versioned npm sources or Git refs in
 `pi_packages`. Changing an already installed CLI specification requires an
 explicit update. Defaults are unpinned.
 
-Pi authentication is configured separately through `/login` or provider API keys.
-Language servers used by the LSP extension must be installed separately.
-No credentials or session data are managed by this playbook.
-
 ## Betterleaks and Git pre-commit hook
 
 The playbook installs `~/.config/git/hooks/pre-commit` and sets
@@ -343,38 +338,6 @@ In emergency situations where a commit must proceed despite a detection:
 git commit --no-verify -m "commit message"
 ```
 
-## Docker
-
-The playbook installs `docker-ce`, `docker-ce-cli`, `containerd.io`,
-`docker-buildx-plugin`, and `docker-compose-plugin`. It enables and starts
-`docker.service` without changing daemon settings or managing containers.
-
-Existing distro Docker/containerd packages cause a failure with migration
-instructions instead of being automatically removed. Other custom Docker apt
-source definitions may require manual reconciliation.
-
-By default, use Docker with sudo. To grant your user access:
-
-```bash
-ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
-  --ask-become-pass --tags repositories,docker -e docker_add_user_to_group=true
-```
-
-**Docker group membership is root-equivalent.** Log out and back in after adding
-the group. Docker-published container ports can bypass UFW rules; review
-[Docker's firewall documentation](https://docs.docker.com/engine/network/packet-filtering-firewalls/)
-before exposing services.
-
-Verify the installation:
-
-```bash
-sudo docker version
-sudo docker compose version
-sudo docker buildx version
-# Optional: downloads and runs a test container.
-sudo docker run --rm hello-world
-```
-
 ## Updates
 
 With the `config` alias configured for the dotfiles repository:
@@ -408,15 +371,6 @@ Vendor installers run as the normal user and are cached under
 `~/.cache/workstation/installers`. They are not pinned or sandboxed.
 Pi extensions and npm lifecycle scripts also execute third-party code;
 review package sources before installing.
-
-## Service and repository behavior
-
-- Known apt source files are managed and may be overwritten; unrelated sources
-  are left alone.
-- Firefox's apt replacement is installed before removing its Snap. Browser
-  profile migration is not automated.
-- Syncthing runs as `syncthing@YOUR_USER.service`. Pair devices separately and do
-  not run another Syncthing instance on the same data.
 
 ## Tests
 
