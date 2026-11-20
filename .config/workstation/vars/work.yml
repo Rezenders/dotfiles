@@ -7,6 +7,10 @@ install_latex: false
 enable_syncthing: false
 
 desktop_packages:
+  - zathura
+  - zathura-cb
+  - zathura-ps
+  - zathura-djvu
   - input-remapper
 
 personal_apt_packages:

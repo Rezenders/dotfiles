@@ -79,6 +79,10 @@ Configuration is split across `vars/common.yml` and profile-specific files in `v
 - `vars/personal.yml`: Default profile for personal Ubuntu 26.04 machines (includes LaTeX, Syncthing, GNOME desktop packages, Claude, Spotify, and Zed).
 - `vars/work.yml`: Profile for work Kubuntu 24.04 machines (omits LaTeX, Syncthing, GNOME packages, and Thunderbird; includes Spotify, Zed, and the local `pi-nvim` fork).
 
+- `vars/server.yml`: Server profile without desktop packages, Firefox, or personal applications; Syncthing is enabled.
+
+Zathura and its document-format plugins are included in the personal and work desktop package lists, not the shared package list.
+
 Select a profile with `-e workstation_profile=<profile>`:
 
 ```bash
@@ -93,6 +97,7 @@ ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --ask-becom
 | --- | --- | --- |
 | `install_latex` | `true` | Install the TeX Live package set |
 | `install_personal_apps` | `true` | Install Spotify, Claude Desktop, Zed, and Claude CLI |
+| `install_firefox` | `true` | Configure Mozilla apt sources, install Firefox, and replace its Snap; disabled on server |
 | `enable_syncthing` | `true` | Install Syncthing and enable its service |
 | `install_zoxide` | `true` | Install zoxide and initialize it in Bash |
 | `install_tdf` | `true` | Build and install the tdf terminal PDF viewer with Cargo |

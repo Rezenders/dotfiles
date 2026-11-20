@@ -70,7 +70,7 @@
       enabled: "{{ enable_syncthing }}"
     - url: https://packages.mozilla.org/apt/repo-signing-key.gpg
       dest: /etc/apt/keyrings/packages.mozilla.org.asc
-      enabled: true
+      enabled: "{{ install_firefox }}"
     - url: https://downloads.claude.ai/claude-desktop/key.asc
       dest: /usr/share/keyrings/claude-desktop-archive-keyring.asc
       enabled: "{{ install_personal_apps | bool and ('claude-desktop' in (personal_apt_packages | default([]))) }}"
@@ -118,7 +118,7 @@
         Suites: mozilla
         Components: main
         Signed-By: /etc/apt/keyrings/packages.mozilla.org.asc
-      enabled: true
+      enabled: "{{ install_firefox }}"
     - filename: claude-desktop.list
       content: |
         deb [arch=amd64,arm64 signed-by=/usr/share/keyrings/claude-desktop-archive-keyring.asc] https://downloads.claude.ai/claude-desktop/apt/stable stable main
@@ -136,6 +136,7 @@
   ansible.builtin.file:
     path: /etc/apt/sources.list.d/mozilla.list
     state: absent
+  when: install_firefox | bool
 
 - name: Prefer upstream Firefox over Ubuntu's transitional package
   become: true
@@ -148,6 +149,7 @@
     owner: root
     group: root
     mode: "0644"
+  when: install_firefox | bool
 
 - name: Prefer packages from Mozilla's repository
   become: true
@@ -160,6 +162,7 @@
     owner: root
     group: root
     mode: "0644"
+  when: install_firefox | bool
 
 - name: Refresh apt metadata after configuring repositories
   become: true

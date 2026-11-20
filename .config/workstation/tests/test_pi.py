@@ -11,6 +11,8 @@ import sys
 import tempfile
 import unittest
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 ANSIBLE = shutil.which("ansible-playbook")
 
@@ -118,7 +120,13 @@ else:
         self.run_tasks()
         commands = self.commands()
         self.assertEqual(sum(c[0] == "npm" for c in commands), 2)
-        self.assertEqual(sum(c[:2] == ["pi", "install"] for c in commands), 5)
+        profile_vars = {}
+        for profile in ("common", "personal"):
+            profile_vars.update(yaml.safe_load((ROOT / f"vars/{profile}.yml").read_text()))
+        self.assertEqual(
+            [c for c in commands if c[:2] == ["pi", "install"]],
+            [["pi", "install", package] for package in profile_vars["pi_packages"]],
+        )
         self.assertEqual(commands[-1], ["pi", "update", "--extensions"])
         self.run_tasks()
         self.assertEqual(self.commands(), commands)

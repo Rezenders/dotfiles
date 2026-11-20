@@ -8,6 +8,10 @@ install_latex: true
 enable_syncthing: true
 
 desktop_packages:
+  - zathura
+  - zathura-cb
+  - zathura-ps
+  - zathura-djvu
   - gnome-shell-extension-manager
   - gnome-browser-connector
   - gnome-clocks
