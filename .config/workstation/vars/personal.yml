@@ -6,10 +6,8 @@ ansible_become_exe: /usr/bin/sudo.ws
 
 install_latex: true
 enable_syncthing: true
-enable_tide_cfg_hook: false
 
 desktop_packages:
-  - kitty
   - gnome-shell-extension-manager
   - gnome-browser-connector
   - gnome-clocks

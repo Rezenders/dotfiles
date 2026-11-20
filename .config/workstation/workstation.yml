@@ -39,6 +39,11 @@
       ansible.builtin.import_tasks: tasks/packages.yml
       tags: packages
 
+    - name: Install kitty terminal
+      ansible.builtin.import_tasks: tasks/kitty.yml
+      when: install_kitty | bool
+      tags: kitty
+
     - name: Install Yazi and recommended preview tools and fonts
       ansible.builtin.import_tasks: tasks/yazi.yml
       tags: [packages, yazi]

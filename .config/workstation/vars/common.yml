@@ -3,19 +3,17 @@
 # Machine-specific settings are in vars/personal.yml and vars/work.yml.
 
 install_personal_apps: true
+install_kitty: true
 install_tdf: true
 install_zoxide: true
 install_pi: true
 install_docker: true
 install_betterleaks: true
 
-# Pre-commit hook for the tide_cfg bare repository; enabled in vars/work.yml.
-enable_tide_cfg_hook: false
-tide_git_dir: "{{ workstation_home }}/.tide_cfg"
-tide_work_tree: "{{ workstation_home }}/rock_local_ws"
-
 betterleaks_version: "1.10.0"
 betterleaks_checksum: "sha256:9d9ad503cd5d80d18a939352266c3fcca52f10da9b83cd5cfe646989b13940fe"
+
+cfg_git_dir: "{{ workstation_home }}/.cfg"
 
 # Docker group membership is root-equivalent; opt in explicitly.
 docker_add_user_to_group: false

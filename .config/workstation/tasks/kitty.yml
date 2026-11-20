@@ -1,0 +1,32 @@
+---
+- name: Install native build dependencies for kitty terminal
+  become: true
+  ansible.builtin.apt:
+    name: [git, curl, ca-certificates, build-essential]
+    state: "{{ package_state }}"
+    update_cache: true
+    cache_valid_time: 3600
+  tags: packages
+
+- name: Install kitty terminal
+  environment:
+    HOME: "{{ workstation_home }}"
+    PATH: "{{ workstation_home }}/.cargo/bin:/usr/bin:/bin:{{ ansible_env.PATH }}"
+  block:
+    - name: Create a user-owned installer cache
+      ansible.builtin.file:
+        path: "{{ workstation_home }}/.cache/workstation/installers"
+        state: directory
+        mode: "0700"
+
+    - name: Download kitty installer
+      ansible.builtin.get_url:
+        url: https://sw.kovidgoyal.net/kitty/installer.sh
+        dest: "{{ workstation_home }}/.cache/workstation/installers/kitty-installer.sh"
+        mode: "0600"
+
+    - name: Install kitty as the normal user
+      ansible.builtin.command:
+        argv:
+          - /bin/sh
+          - "{{ workstation_home }}/.cache/workstation/installers/kitty-installer.sh"

@@ -7,8 +7,10 @@ install_latex: false
 enable_syncthing: false
 enable_tide_cfg_hook: true
 
+tide_git_dir: "{{ workstation_home }}/.tide_cfg"
+tide_work_tree: "{{ workstation_home }}/rock_local_ws"
+
 desktop_packages:
-  - kitty
   - input-remapper
 
 personal_apt_packages:

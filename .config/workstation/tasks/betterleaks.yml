@@ -107,3 +107,66 @@
 
           exec "$BETTERLEAKS" git --pre-commit --staged --redact -v
       when: tide_cfg_dir.stat.exists
+
+- name: Configure Betterleaks pre-commit hook for .cfg (this repo)
+  when:
+    - enable_cfg_hook | default(true) | bool
+  block:
+    - name: Check whether .cfg repository exists
+      ansible.builtin.stat:
+        path: "{{ cfg_git_dir }}"
+      register: cfg_dir
+
+    - name: Ensure cfg hooks directory exists
+      ansible.builtin.file:
+        path: "{{ cfg_git_dir }}/hooks"
+        state: directory
+        mode: "0755"
+      when: cfg_dir.stat.exists
+
+    - name: Check for existing pre-commit hook in cfg
+      ansible.builtin.stat:
+        path: "{{ cfg_git_dir }}/hooks/pre-commit"
+      register: cfg_hook_stat
+      when: cfg_dir.stat.exists
+
+    - name: Read existing pre-commit hook if present
+      ansible.builtin.slurp:
+        src: "{{ cfg_git_dir }}/hooks/pre-commit"
+      register: cfg_existing_hook
+      when:
+        - cfg_dir.stat.exists
+        - cfg_hook_stat.stat.exists
+
+    - name: Verify existing pre-commit hook is not unmanaged
+      ansible.builtin.assert:
+        that:
+          - "'betterleaks' in (cfg_existing_hook.content | b64decode)"
+        fail_msg: >-
+          An unmanaged pre-commit hook exists at {{ cfg_git_dir }}/hooks/pre-commit.
+          To prevent losing existing hook functionality, inspect and merge it manually.
+      when:
+        - cfg_dir.stat.exists
+        - cfg_hook_stat.stat.exists
+
+    - name: Install Betterleaks pre-commit hook in cfg
+      ansible.builtin.copy:
+        dest: "{{ cfg_git_dir }}/hooks/pre-commit"
+        mode: "0755"
+        content: |
+          #!/bin/sh
+          # Managed by Ansible (~/.config/workstation)
+          set -e
+
+          if command -v betterleaks >/dev/null 2>&1; then
+              BETTERLEAKS="betterleaks"
+          elif [ -x "$HOME/.local/bin/betterleaks" ]; then
+              BETTERLEAKS="$HOME/.local/bin/betterleaks"
+          else
+              echo "Error: betterleaks is not installed or not in PATH / \$HOME/.local/bin" >&2
+              echo "Run Ansible to install Betterleaks: ansible-playbook ~/.config/workstation/workstation.yml" >&2
+              exit 1
+          fi
+
+          exec "$BETTERLEAKS" git --pre-commit --staged --redact -v
+      when: cfg_dir.stat.exists
