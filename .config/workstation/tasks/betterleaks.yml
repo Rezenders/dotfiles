@@ -45,50 +45,39 @@
         mode: "0755"
         remote_src: true
 
-- name: Configure Betterleaks pre-commit hook for tide_cfg
-  when:
-    - enable_tide_cfg_hook | default(false) | bool
+- name: Configure user-global Betterleaks pre-commit hook
+  when: enable_global_git_hook | default(true) | bool
   block:
-    - name: Check whether tide_cfg repository exists
-      ansible.builtin.stat:
-        path: "{{ tide_git_dir }}"
-      register: tide_cfg_dir
-
-    - name: Ensure tide_cfg hooks directory exists
+    - name: Ensure user-global hooks directory exists
       ansible.builtin.file:
-        path: "{{ tide_git_dir }}/hooks"
+        path: "{{ workstation_home }}/.config/git/hooks"
         state: directory
         mode: "0755"
-      when: tide_cfg_dir.stat.exists
 
-    - name: Check for existing pre-commit hook in tide_cfg
+    - name: Check for existing global pre-commit hook
       ansible.builtin.stat:
-        path: "{{ tide_git_dir }}/hooks/pre-commit"
-      register: tide_cfg_hook_stat
-      when: tide_cfg_dir.stat.exists
+        path: "{{ workstation_home }}/.config/git/hooks/pre-commit"
+      register: global_hook_stat
 
-    - name: Read existing pre-commit hook if present
+    - name: Read existing global pre-commit hook if present
       ansible.builtin.slurp:
-        src: "{{ tide_git_dir }}/hooks/pre-commit"
-      register: tide_cfg_existing_hook
-      when:
-        - tide_cfg_dir.stat.exists
-        - tide_cfg_hook_stat.stat.exists
+        src: "{{ workstation_home }}/.config/git/hooks/pre-commit"
+      register: global_existing_hook
+      when: global_hook_stat.stat.exists
 
-    - name: Verify existing pre-commit hook is not unmanaged
+    - name: Verify existing global pre-commit hook is managed
       ansible.builtin.assert:
         that:
-          - "'betterleaks' in (tide_cfg_existing_hook.content | b64decode)"
+          - "'# Managed by Ansible (~/.config/workstation)' in (global_existing_hook.content | b64decode)"
+          - "'betterleaks' in (global_existing_hook.content | b64decode)"
         fail_msg: >-
-          An unmanaged pre-commit hook exists at {{ tide_git_dir }}/hooks/pre-commit.
+          An unmanaged pre-commit hook exists at {{ workstation_home }}/.config/git/hooks/pre-commit.
           To prevent losing existing hook functionality, inspect and merge it manually.
-      when:
-        - tide_cfg_dir.stat.exists
-        - tide_cfg_hook_stat.stat.exists
+      when: global_hook_stat.stat.exists
 
-    - name: Install Betterleaks pre-commit hook in tide_cfg
+    - name: Install user-global Betterleaks pre-commit hook
       ansible.builtin.copy:
-        dest: "{{ tide_git_dir }}/hooks/pre-commit"
+        dest: "{{ workstation_home }}/.config/git/hooks/pre-commit"
         mode: "0755"
         content: |
           #!/bin/sh
@@ -106,67 +95,33 @@
           fi
 
           exec "$BETTERLEAKS" git --pre-commit --staged --redact -v
-      when: tide_cfg_dir.stat.exists
 
-- name: Configure Betterleaks pre-commit hook for .cfg (this repo)
-  when:
-    - enable_cfg_hook | default(true) | bool
-  block:
-    - name: Check whether .cfg repository exists
-      ansible.builtin.stat:
-        path: "{{ cfg_git_dir }}"
-      register: cfg_dir
+    # Append after existing includes so they cannot override the managed path.
+    # Git permits repeated sections; unrelated settings remain untouched.
+    - name: Set user-global Git hooks path
+      ansible.builtin.blockinfile:
+        path: "{{ workstation_home }}/.gitconfig"
+        create: true
+        mode: "0644"
+        marker: "# {mark} ANSIBLE MANAGED BETTERLEAKS HOOKS"
+        insertafter: EOF
+        block: |
+          [core]
+              hooksPath = "{{ workstation_home }}/.config/git/hooks"
 
-    - name: Ensure cfg hooks directory exists
-      ansible.builtin.file:
-        path: "{{ cfg_git_dir }}/hooks"
-        state: directory
-        mode: "0755"
-      when: cfg_dir.stat.exists
-
-    - name: Check for existing pre-commit hook in cfg
-      ansible.builtin.stat:
-        path: "{{ cfg_git_dir }}/hooks/pre-commit"
-      register: cfg_hook_stat
-      when: cfg_dir.stat.exists
-
-    - name: Read existing pre-commit hook if present
-      ansible.builtin.slurp:
-        src: "{{ cfg_git_dir }}/hooks/pre-commit"
-      register: cfg_existing_hook
-      when:
-        - cfg_dir.stat.exists
-        - cfg_hook_stat.stat.exists
-
-    - name: Verify existing pre-commit hook is not unmanaged
-      ansible.builtin.assert:
-        that:
-          - "'betterleaks' in (cfg_existing_hook.content | b64decode)"
-        fail_msg: >-
-          An unmanaged pre-commit hook exists at {{ cfg_git_dir }}/hooks/pre-commit.
-          To prevent losing existing hook functionality, inspect and merge it manually.
-      when:
-        - cfg_dir.stat.exists
-        - cfg_hook_stat.stat.exists
-
-    - name: Install Betterleaks pre-commit hook in cfg
-      ansible.builtin.copy:
-        dest: "{{ cfg_git_dir }}/hooks/pre-commit"
-        mode: "0755"
-        content: |
-          #!/bin/sh
-          # Managed by Ansible (~/.config/workstation)
-          set -e
-
-          if command -v betterleaks >/dev/null 2>&1; then
-              BETTERLEAKS="betterleaks"
-          elif [ -x "$HOME/.local/bin/betterleaks" ]; then
-              BETTERLEAKS="$HOME/.local/bin/betterleaks"
-          else
-              echo "Error: betterleaks is not installed or not in PATH / \$HOME/.local/bin" >&2
-              echo "Run Ansible to install Betterleaks: ansible-playbook ~/.config/workstation/workstation.yml" >&2
-              exit 1
-          fi
-
-          exec "$BETTERLEAKS" git --pre-commit --staged --redact -v
-      when: cfg_dir.stat.exists
+    - name: Verify effective user hooks path including included config
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/git
+          - config
+          - --file
+          - "{{ workstation_home }}/.gitconfig"
+          - --includes
+          - --get
+          - core.hooksPath
+      register: global_hooks_path
+      changed_when: false
+      failed_when: >-
+        global_hooks_path.rc != 0 or
+        global_hooks_path.stdout != workstation_home ~ '/.config/git/hooks'
+      when: not ansible_check_mode

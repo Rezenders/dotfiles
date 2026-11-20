@@ -63,7 +63,13 @@ there is no custom plugin-directory loader. **Order matters**:
 10. Final `custom.latex.setup()` follows LuaSnip; Pi and Claude integrations run last.
 
 UI owns which-key, themes/highlights, icons, indentation/line-length guides, and
-mini status displays. Editing owns guess-indent, todo-comments, mini.ai/surround,
+mini status displays. `custom.appearance` selects Kanagawa (beast) or Gruvbox
+(other hosts) from the terminal's OSC 11 background reports, both at startup and
+on live changes. It preserves native startup detection, uses the bounded desktop
+query only as a fallback, and deduplicates repeated reports. Its persistent listener
+is needed because Gruvbox explicitly sets `background`, disabling Neovim's native
+background callback. Neovim's TUI owns mode-2031 subscription/resume queries; no
+custom protocol subscription or desktop polling is added. Editing owns guess-indent, todo-comments, mini.ai/surround,
 and autopairs. Git owns gitsigns, native diff wrapping, diffview, gitlinker, and Git
 keymaps. UI/editing share mini.nvim; editing/Git share Plenary; vim.pack deduplicates
 repeated dependency additions. Treesitter uses `main`, installs parsers on FileType,
@@ -96,7 +102,11 @@ Neovim runs inside kitty and toggles side "dock" windows (Yazi, Claude, Pi) via
 `kitten @ launch --type=tab-dock`, tagging them with the user var `nvim_dock`. Hiding a
 dock calls `kitty/dock_toggle.py` (a kitten using kitty internal APIs) to park the window
 in a hidden `NVIM docks [<id>]` tab and restore it later with its original `DockSpec`,
-so the child process keeps running.
+so the child process keeps running. Yazi's editor opener is configured separately
+in `~/.config/yazi/yazi.toml`: `scripts/edit-in-nvim` uses checked RPC calls with
+2-second deadlines and safely escaped absolute filenames. Failed RPC falls back
+to standalone Neovim without a deadline; failed Kitty focus never opens a second
+editor. The standalone child drops stale Yazi owner/server environment variables.
 
 ### AI integrations
 - Claude Code: `custom.integrations.claude` configures `coder/claudecode.nvim`; Claude itself runs as `claude --ide` in a kitty
@@ -147,7 +157,8 @@ nvim --clean -l tests/formatting.lua   # installed Conform + StyLua/Ruff/Prettie
 nvim --clean -l tests/lsp_tools.lua    # formatter installation vs actual LSP server registration
 nvim --clean -l tests/integrations.lua # Kitty/image guard, split launches, Pi/Claude mappings
 nvim --clean -l tests/diagnostic_list.lua # diagnostic location-list filtering
-nvim --clean -l tests/ui.lua           # installed UI/editing/Git plugins; all four host/appearance combinations
+nvim --clean -l tests/ui.lua           # installed UI/editing/Git plugins; all four host/appearance combinations and live theme events
+nvim --clean -l tests/appearance.lua   # terminal response parsing, startup precedence, late UI attach and deduplication
 nvim --clean -l tests/smartcolumn.lua   # needs smartcolumn.nvim installed via vim.pack
 nvim --clean -l tests/ltex_extra.lua    # needs ltex_extra.nvim installed via vim.pack
 nvim --clean -l tests/runtime.lua       # optional integrations and subprocess failure paths
@@ -157,6 +168,7 @@ nvim --clean -l tests/linting.lua       # linter configuration and unchanged aut
 nvim --clean -l tests/health.lua        # health diagnostics with mocked tools/processes
 nvim --clean -l tests/file_autocmds.lua # cursor restoration and safe parent-directory creation
 kitty +runpy 'import runpy; runpy.run_path("tests/kitty_dock_toggle.py", run_name="__main__")'
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s ~/.config/yazi/tests -v
 ```
 
 ## Style

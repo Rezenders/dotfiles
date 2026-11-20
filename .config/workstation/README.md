@@ -98,7 +98,7 @@ ansible-playbook ~/.config/workstation/workstation.yml -i localhost, --ask-becom
 | `install_tdf` | `true` | Build and install the tdf terminal PDF viewer with Cargo |
 | `install_pi` | `true` | Install Node.js, npm, Pi, ast-grep, and Pi extensions |
 | `install_betterleaks` | `true` | Install Betterleaks secret scanner CLI |
-| `enable_tide_cfg_hook` | `false` | Install Betterleaks pre-commit hook in `~/.tide_cfg` (enabled in `work` profile) |
+| `enable_global_git_hook` | `true` | Install a user-global Betterleaks pre-commit hook and configure Git to use it |
 | `install_docker` | `true` | Install Docker CE and enable its system service |
 | `docker_add_user_to_group` | `false` | Grant the invoking user root-equivalent Docker access |
 | `package_state` | `latest` | Upgrade managed apt packages; use `present` for missing packages only |
@@ -290,21 +290,15 @@ No credentials or session data are managed by this playbook.
 
 ## Betterleaks and Git pre-commit hook
 
-Betterleaks is a secret scanner that prevents credentials, tokens, and private
-keys from being committed into Git repositories.
-
-The playbook installs the standalone `betterleaks` binary into `~/.local/bin`
-from official GitHub releases, verified by SHA-256 checksum.
-
-When running under the `work` persona (`enable_tide_cfg_hook=true`), the playbook
-installs a dedicated Git pre-commit hook in the bare configuration repository at
-`~/.tide_cfg/hooks/pre-commit`. Other Git repositories and existing hooks are
-unaffected.
+The playbook installs `~/.config/git/hooks/pre-commit` and sets
+`core.hooksPath` in `~/.gitconfig` to `~/.config/git/hooks` (as an absolute path).
+Existing hooks in that global directory, such as `pre-push`, are
+preserved. 
 
 ### How the hook works
 
-Before each commit initiated via `tw-ws-config commit`, Git invokes
-`~/.tide_cfg/hooks/pre-commit`, which executes:
+Before each normal commit, Git invokes `~/.config/git/hooks/pre-commit`, which 
+executes:
 
 ```bash
 betterleaks git --pre-commit --staged --redact -v
@@ -315,14 +309,15 @@ betterleaks git --pre-commit --staged --redact -v
   while reporting the rule name, file path, and line numbers.
 - **Enforcement**: If secrets are detected, Betterleaks exits with code `1` and
   aborts the commit. If no secrets are found, it exits with `0` and allows the commit.
-- **Location-independent**: Works regardless of the directory from which `tw-ws-config commit` is invoked.
+- **Repository context**: Uses the committing repository's Git environment,
+  including bare-repository aliases with an explicit work tree.
 
 ### Manual scanning
 
 You can run Betterleaks manually at any time:
 
 ```bash
-# Scan staged changes in the rock_local_ws working tree
+# Scan staged changes in the current repository
 betterleaks git --pre-commit --staged --redact -v
 
 # Scan an entire directory or working tree
@@ -345,21 +340,8 @@ If Betterleaks flags a false positive:
 In emergency situations where a commit must proceed despite a detection:
 
 ```bash
-tw-ws-config commit --no-verify -m "commit message"
+git commit --no-verify -m "commit message"
 ```
-
-### Updates and reproduction via Ansible
-
-To install or update Betterleaks and deploy the hook:
-
-```bash
-ansible-playbook ~/.config/workstation/workstation.yml -i localhost, \
-  --tags betterleaks -e workstation_profile=work
-```
-
-To upgrade to a newer Betterleaks version, update `betterleaks_version` and
-`betterleaks_checksum` in `vars/common.yml`, then re-run the playbook.
-
 
 ## Docker
 
