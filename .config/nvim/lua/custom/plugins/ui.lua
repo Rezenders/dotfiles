@@ -14,7 +14,7 @@ function M.setup()
   require('which-key').setup {
     preset = 'modern',
     win = {
-       border = 'rounded', -- 'single', 'double', 'rounded', 'shadow'
+      border = 'rounded', -- 'single', 'double', 'rounded', 'shadow'
     },
     icons = { mappings = vim.g.have_nerd_font },
     -- Delay between pressing a key and opening which-key (milliseconds)
@@ -76,8 +76,7 @@ function M.setup()
   })
 
   -- `beast` is the personal machine; every other host gets the work theme.
-  require('custom.appearance').setup(vim.uv.os_gethostname() == 'beast')
-
+  require('custom.appearance').setup(vim.uv.os_gethostname() == 'beast' or vim.uv.os_gethostname() == 'redserver')
 
   -- Indentation guides use the plugin defaults.
   vim.pack.add { gh 'lukas-reineke/indent-blankline.nvim' }
@@ -113,17 +112,15 @@ function M.setup()
   statusline.section_location = function() return '%2l:%-2v' end
 
   require('mini.statuscolumn').setup()
-  require('mini.tabline').setup({
+  require('mini.tabline').setup {
     format = function(buf_id, label)
       local name = MiniTabline.default_format(buf_id, label)
 
-      if vim.bo[buf_id].modified then
-        return name .. ' ●'
-      end
+      if vim.bo[buf_id].modified then return name .. ' ●' end
 
       return name
     end,
-  })
+  }
 end
 
 return M
