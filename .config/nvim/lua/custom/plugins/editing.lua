@@ -48,6 +48,8 @@ function M.setup()
     },
   }
 
+  -- Disable built-in `s` before mini.surround
+  -- vim.keymap.set({ 'n', 'x' }, 's', '<Nop>', { silent = true })
   -- Add/delete/replace surroundings (brackets, quotes, etc.)
   --
   -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren

@@ -32,6 +32,13 @@ function M.servers()
     -- Grammar and spelling checking
     ltex_plus = {
       filetypes = { 'tex', 'plaintex', 'markdown' },
+      -- Class and style files are LaTeX code, not prose: do not grammar-check them.
+      -- Neovim attaches the server only when root_dir calls on_dir.
+      root_dir = function(bufnr, on_dir)
+        local name = vim.api.nvim_buf_get_name(bufnr)
+        if name:match '%.cls$' or name:match '%.sty$' then return end
+        on_dir(vim.fs.root(bufnr, { '.git' }) or vim.fs.dirname(name))
+      end,
       -- Bind deferred dictionary updates to the attached LTeX client.
       on_attach = require('custom.latex.ltex_extra').on_attach,
       settings = {

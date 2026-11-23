@@ -139,6 +139,8 @@ function M.setup()
       settings = {
         Lua = {
           format = { enable = false }, -- Disable formatting (formatting is done by stylua)
+          -- Neovim's global; also covers project .nvim.lua files outside this config.
+          diagnostics = { globals = { 'vim' } },
         },
       },
     },

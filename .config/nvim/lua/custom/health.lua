@@ -30,7 +30,7 @@ local function check_tools()
   vim.health.info 'Markdown: Prettier and markdownlint use their own project configuration; smartcolumn uses EditorConfig max_line_length (80-column fallback). Keep those project policies aligned.'
 
   vim.health.start 'LaTeX (optional per workflow)'
-  for _, exe in ipairs { 'latexmk', 'pdflatex', 'chktex', 'latexindent', 'zathura' } do
+  for _, exe in ipairs { 'latexmk', 'lualatex', 'chktex', 'latexindent', 'zathura' } do
     executable(exe, 'Workflow tool')
   end
 end

@@ -28,7 +28,7 @@ vim.lsp.config('health_test', { cmd = { 'missing-server' } })
 health.lsp_servers = { 'health_test' }
 vim.env.KITTY_WINDOW_ID = nil
 check { 'missing-server not found', 'Not running inside Kitty', 'Local Pi checkout is missing', 'Pi integration is not loaded' }
-for _, exe in ipairs { 'fzf', 'node', 'prettier', 'stylua', 'ruff', 'markdownlint', 'magick', 'kitten', 'latexmk', 'chktex', 'latexindent', 'zathura' } do
+for _, exe in ipairs { 'fzf', 'node', 'prettier', 'stylua', 'ruff', 'markdownlint', 'magick', 'kitten', 'latexmk', 'lualatex', 'chktex', 'latexindent', 'zathura' } do
   assert(checked[exe], 'Tool not checked: ' .. exe)
 end
 assert(not checked.go and not checked.dlv, 'Removed debugger tools must not be checked')

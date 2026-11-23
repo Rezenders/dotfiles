@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "strategy": "window",
+  "strategy": "edge",
   "strategies": {
     "edge": {
       "modifier": "alt",

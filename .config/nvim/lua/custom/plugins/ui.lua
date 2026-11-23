@@ -18,7 +18,7 @@ function M.setup()
     },
     icons = { mappings = vim.g.have_nerd_font },
     -- Delay between pressing a key and opening which-key (milliseconds)
-    delay = 0,
+    delay = 300,
     -- Document existing key chains
     spec = {
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },

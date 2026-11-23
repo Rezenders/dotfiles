@@ -9,7 +9,7 @@ function M.setup()
   vim.g.have_nerd_font = true
 
   vim.o.number = true
-  vim.o.relativenumber = false
+  vim.o.relativenumber = true
 
   -- Enable mouse mode, can be useful for resizing splits for example!
   vim.o.mouse = 'a'
@@ -30,6 +30,9 @@ function M.setup()
   --  Remove this option if you want your OS clipboard to remain independent.
   --  See `:help 'clipboard'`
   vim.schedule(function() vim.o.clipboard = 'unnamedplus' end)
+  if vim.env.SSH_TTY then
+    vim.g.clipboard = 'osc52'
+  end
 
   vim.o.linebreak = true
   vim.o.breakindent = true
@@ -44,7 +47,7 @@ function M.setup()
   vim.o.updatetime = 250
 
   -- Decrease mapped sequence wait time
-  vim.o.timeoutlen = 300
+  vim.o.timeoutlen = 600
 
   -- Configure how new splits should be opened
   vim.o.splitright = true
@@ -67,7 +70,7 @@ function M.setup()
   vim.o.cursorline = true
 
   -- Minimal number of screen lines to keep above and below the cursor.
-  vim.o.scrolloff = 12
+  vim.o.scrolloff = 15
 
   -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
   -- instead raise a dialog asking if you wish to save the current file(s)
@@ -76,11 +79,11 @@ function M.setup()
 
   vim.o.exrc = true
 
-  -- START Optimizations for light mode
-
-  -- Uses 24-bit hex definitions colors
-  vim.opt.termguicolors = true
-  -- END
+  -- -- START Optimizations for light mode
+  --
+  -- -- Uses 24-bit hex definitions colors
+  -- vim.opt.termguicolors = true
+  -- -- END
 
   -- vim.o.pumblend = 10 -- transparency for popup menu / completions (0-100)
   -- vim.o.winblend = 10  -- keep at 0 if you prefer crisp contrast, or 5-10 for subtle float glass effect
@@ -94,11 +97,12 @@ function M.setup()
   -- Maximum number of undo changes
   vim.o.undolevels = 10000
 
-  -- 1. Tell Neovim where to look
+  -- Improve finding files when using `gf`
+  -- Tell Neovim where to look for files
   -- Adding "**" makes Neovim search recursively down into subdirectories
   vim.opt.path:append("**")
 
-  -- 2. Tell Neovim which extensions to guess if they are missing
+  -- Tell Neovim which extensions to guess if they are missing
   -- If you type 'myfile' without '.md', Neovim will check for 'myfile.md', 'myfile.lua', etc.
   vim.opt.suffixesadd:prepend({ ".rb", ".md", ".lua", ".js", ".ts" })
 

@@ -3,6 +3,19 @@
 vim.keymap.set('n', '<leader>lf', require('custom.plugins.formatting').format,
   { buffer = 0, desc = 'Format LaTeX document (alias)' })
 
+-- VimTeX options are Vimscript numbers (0/1), so toggle with 1 - x.
+-- Toggle whether VimTeX opens the viewer after the first successful compile.
+vim.keymap.set('n', '<localleader>lV', function()
+  vim.g.vimtex_view_automatic = 1 - vim.g.vimtex_view_automatic
+  vim.notify('VimTeX auto-view: ' .. vim.g.vimtex_view_automatic)
+end, { buffer = 0, desc = 'Toggle VimTeX auto-view' })
+
+-- Toggle opening the quickfix window automatically for warnings (errors always open it).
+vim.keymap.set('n', '<localleader>lW', function()
+  vim.g.vimtex_quickfix_open_on_warning = 1 - vim.g.vimtex_quickfix_open_on_warning
+  vim.notify('VimTeX auto-open on warnings: ' .. vim.g.vimtex_quickfix_open_on_warning)
+end, { buffer = 0, desc = 'Toggle VimTeX quickfix auto-open on warnings' })
+
 -- Use LTeX+ for spelling and grammar instead of duplicate built-in highlights.
 vim.opt_local.spell = false
 

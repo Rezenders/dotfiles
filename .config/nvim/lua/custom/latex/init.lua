@@ -17,6 +17,16 @@ function M.setup()
 
   vim.g.vimtex_view_method = vim.g.vimtex_view_method or 'zathura_simple'
 
+  -- Build into ./build by default; a project's .latexmkrc ($out_dir) takes priority.
+  vim.g.vimtex_compiler_latexmk = vim.tbl_extend('keep', vim.g.vimtex_compiler_latexmk or {}, {
+    out_dir = 'build',
+  })
+
+  -- Default engine when neither a project .latexmkrc nor a "% !TeX program" line sets one.
+  vim.g.vimtex_compiler_latexmk_engines = vim.tbl_extend('keep', vim.g.vimtex_compiler_latexmk_engines or {}, {
+    _ = '-lualatex',
+  })
+
   -- Load mathematical LaTeX snippets
   require('luasnip-latex-snippets').setup {
     use_treesitter = false,
