@@ -1,7 +1,6 @@
 -- One manual, asynchronous formatting workflow; never format on save.
 local M = {}
 
-local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.format()
   local buf = vim.api.nvim_get_current_buf()
@@ -35,7 +34,7 @@ function M.format()
 end
 
 function M.setup()
-  vim.pack.add { gh 'stevearc/conform.nvim' }
+  vim.pack.add { 'https://github.com/stevearc/conform.nvim' }
 
   require('conform').setup {
     default_format_opts = { lsp_format = 'never' }, -- Only explicitly selected formatters.

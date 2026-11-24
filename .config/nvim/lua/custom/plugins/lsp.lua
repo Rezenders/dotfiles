@@ -1,11 +1,10 @@
 -- LSP setup is called from init.lua at the original Section 6 startup position.
 local M = {}
 
-local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
   -- Useful status updates for LSP.
-  vim.pack.add { gh 'j-hui/fidget.nvim' }
+  vim.pack.add { 'https://github.com/j-hui/fidget.nvim' }
   require('fidget').setup {
     notification = {
     },
@@ -149,11 +148,11 @@ function M.setup()
   servers = vim.tbl_extend('error', servers, require('custom.latex.lsp').servers())
 
   vim.pack.add {
-    gh 'neovim/nvim-lspconfig',
-    gh 'mason-org/mason.nvim',
-    gh 'mason-org/mason-lspconfig.nvim',
-    gh 'WhoIsSethDaniel/mason-tool-installer.nvim',
-    { src = gh 'saghen/blink.cmp', version = vim.version.range '1.*' },
+    'https://github.com/neovim/nvim-lspconfig',
+    'https://github.com/mason-org/mason.nvim',
+    'https://github.com/mason-org/mason-lspconfig.nvim',
+    'https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim',
+    { src = 'https://github.com/saghen/blink.cmp', version = vim.version.range '1.*' },
   }
 
   -- Load Blink before enabling servers so their initialize requests advertise

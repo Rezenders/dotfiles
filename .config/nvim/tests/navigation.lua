@@ -16,12 +16,20 @@ local fzf = setmetatable({
   register_ui_select = function() calls.ui_select = true end,
 }, { __index = function(_, name) return function(options) calls[name] = options or true end end })
 package.loaded['fzf-lua'] = fzf
+package.loaded['grug-far'] = { setup = function(options) configs.grug_far = options end }
+package.loaded.yazi = { setup = function(options) configs.yazi = options end }
 package.loaded['neo-tree'] = { setup = function(options) configs.explorer = options end }
 package.loaded.markview = { setup = function(options) configs.markview = options end }
 local search = require 'custom.plugins.search'
 assert(next(added) == nil, 'Require must not initialize plugins')
 search.setup()
 assert(added['fzf-lua'] and calls.ui_select)
+assert(added['grug-far.nvim'] == 'https://github.com/MagicDuck/grug-far.nvim')
+assert(configs.grug_far.engine == 'ripgrep')
+for _, mode in ipairs { 'n', 'x' } do
+  assert(vim.fn.maparg(' sR', mode):lower() == ':grugfar<cr>')
+end
+assert(type(vim.fn.maparg(' sr', 'n', false, true).callback) == 'function')
 assert(configs.fzf.fzf_colors and configs.fzf.fzf_opts['--no-scrollbar'])
 assert(configs.fzf.winopts.preview.flip_columns == 135)
 local function invoke(lhs, mode)
@@ -50,6 +58,18 @@ assert(vim.fn.maparg(' bb', 'n') == '<C-^>')
 
 require('custom.plugins.file_explorer').setup()
 assert(added['neo-tree.nvim'].version and added['plenary.nvim'] and added['nui.nvim'])
+assert(added['yazi.nvim'].src == 'https://github.com/mikavilpas/yazi.nvim')
+assert(added['yazi.nvim'].version == 'main')
+assert(configs.yazi.open_for_directories == false and configs.yazi.change_neovim_cwd_on_close == false)
+assert(configs.yazi.floating_window_scaling_factor == 0.9 and configs.yazi.clipboard_register == '+')
+assert(configs.yazi.integrations.grep_in_directory == 'fzf-lua')
+assert(configs.yazi.integrations.grep_in_selected_files == 'fzf-lua')
+assert(configs.yazi.keymaps == nil, 'Keep the default grug-far integration enabled')
+for _, mode in ipairs { 'n', 'x' } do
+  assert(vim.fn.maparg(' -', mode):lower() == '<cmd>yazi<cr>')
+end
+assert(vim.fn.maparg(' fy', 'n'):lower() == '<cmd>yazi cwd<cr>')
+assert(vim.fn.maparg(' fY', 'n'):lower() == '<cmd>yazi toggle<cr>')
 assert(vim.fn.maparg('\\', 'n'):lower() == '<cmd>neotree reveal<cr>')
 local mappings = configs.explorer.filesystem.window.mappings
 assert(mappings['\\'] == 'close_window')

@@ -1,11 +1,10 @@
 -- search configuration, explicitly initialized from init.lua.
 local M = {}
 
-local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
   -- fzf-lua uses the external fzf binary. Press <F1> in a picker for help.
-  vim.pack.add { gh 'ibhagwan/fzf-lua' }
+  vim.pack.add { 'https://github.com/ibhagwan/fzf-lua' }
   local fzf = require 'fzf-lua'
   fzf.setup {
     -- Derive fzf's own colors from the active colorscheme's highlight groups.
@@ -40,6 +39,14 @@ function M.setup()
     },
   }
   fzf.register_ui_select()
+
+  vim.pack.add { 'https://github.com/MagicDuck/grug-far.nvim' }
+  require('grug-far').setup {
+    engine = 'ripgrep',
+  }
+  vim.keymap.set({ 'n', 'x' }, '<leader>sR', ':GrugFar<CR>', {
+    desc = '[S]earch and [R]eplace',
+  })
 
   vim.keymap.set('n', '<leader>sh', fzf.helptags, { desc = '[S]earch [H]elp' })
   vim.keymap.set('n', '<leader>sk', fzf.keymaps, { desc = '[S]earch [K]eymaps' })

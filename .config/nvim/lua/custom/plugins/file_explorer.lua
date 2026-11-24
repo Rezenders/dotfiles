@@ -12,6 +12,26 @@ function M.setup()
     "https://github.com/MunifTanjim/nui.nvim",
   })
 
+  vim.pack.add {
+    {
+      src = 'https://github.com/mikavilpas/yazi.nvim',
+      version = 'main',
+    },
+  }
+  require('yazi').setup {
+    open_for_directories = false,
+    change_neovim_cwd_on_close = false,
+    floating_window_scaling_factor = 0.9,
+    clipboard_register = '+',
+    integrations = {
+      grep_in_directory = 'fzf-lua',
+      grep_in_selected_files = 'fzf-lua',
+    },
+  }
+  vim.keymap.set({ 'n', 'v' }, '<leader>-', '<Cmd>Yazi<CR>', { desc = 'Yazi at current file' })
+  vim.keymap.set('n', '<leader>fy', '<Cmd>Yazi cwd<CR>', { desc = 'Yazi at working directory' })
+  vim.keymap.set('n', '<leader>fY', '<Cmd>Yazi toggle<CR>', { desc = 'Yazi at last location' })
+
   vim.keymap.set('n', '\\', '<Cmd>Neotree reveal<CR>', { desc = 'NeoTree reveal', silent = true })
 
   require('neo-tree').setup {

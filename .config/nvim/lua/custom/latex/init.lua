@@ -11,8 +11,8 @@ local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
   vim.pack.add {
-    gh 'lervag/vimtex',
-    gh 'iurimateus/luasnip-latex-snippets.nvim',
+    'https://github.com/lervag/vimtex',
+    'https://github.com/iurimateus/luasnip-latex-snippets.nvim',
   }
 
   vim.g.vimtex_view_method = vim.g.vimtex_view_method or 'zathura_simple'

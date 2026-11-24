@@ -1,10 +1,9 @@
 -- Parser installation and Treesitter attachment; called at the original Section 9 position.
 local M = {}
 
-local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
-  vim.pack.add { { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' } }
+  vim.pack.add { { src = 'https://github.com/nvim-treesitter/nvim-treesitter', version = 'main' } }
 
   -- Ensure basic parsers are installed
   local parsers = {

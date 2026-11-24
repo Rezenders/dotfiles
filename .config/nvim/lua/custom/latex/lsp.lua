@@ -6,7 +6,7 @@ local function gh(repo) return 'https://github.com/' .. repo end
 ---@return table<string, vim.lsp.Config>
 function M.servers()
   -- Client-side LTeX commands: dictionary, false positives, and rule disabling.
-  vim.pack.add { gh 'barreiroleo/ltex_extra.nvim' }
+  vim.pack.add { 'https://github.com/barreiroleo/ltex_extra.nvim' }
 
   return {
     texlab = {

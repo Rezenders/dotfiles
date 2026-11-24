@@ -5,7 +5,7 @@ local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
   vim.pack.add {
-    gh 'coder/claudecode.nvim',
+    'https://github.com/coder/claudecode.nvim',
   }
 
   require('claudecode').setup({

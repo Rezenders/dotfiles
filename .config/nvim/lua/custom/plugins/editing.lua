@@ -1,10 +1,9 @@
 -- Editing behavior and source annotations.
 local M = {}
 
-local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
-  vim.pack.add { gh 'NMAC427/guess-indent.nvim' }
+  vim.pack.add { 'https://github.com/NMAC427/guess-indent.nvim' }
   require('guess-indent').setup {
     filetype_exclude = {
         'netrw',
@@ -16,14 +15,14 @@ function M.setup()
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add {
-    gh 'nvim-lua/plenary.nvim', -- todo-comments search dependency, independent of Git setup.
-    gh 'folke/todo-comments.nvim',
+    'https://github.com/nvim-lua/plenary.nvim', -- todo-comments search dependency, independent of Git setup.
+    'https://github.com/folke/todo-comments.nvim',
   }
   require('todo-comments').setup { signs = false }
 
   -- [[ mini.nvim ]]
   --  A collection of various small independent plugins/modules
-  vim.pack.add { gh 'nvim-mini/mini.nvim' }
+  vim.pack.add { 'https://github.com/nvim-mini/mini.nvim' }
 
   -- Better Around/Inside textobjects
   --
@@ -76,7 +75,7 @@ function M.setup()
     options = { reindent_linewise = true },
   }
 
-  vim.pack.add { gh 'windwp/nvim-autopairs' }
+  vim.pack.add { 'https://github.com/windwp/nvim-autopairs' }
   require('nvim-autopairs').setup {}
 end
 

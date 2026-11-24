@@ -6,9 +6,9 @@ local function gh(repo) return 'https://github.com/' .. repo end
 -- Must run before require('blink.cmp').setup().
 function M.setup()
   vim.pack.add {
-    gh 'micangl/cmp-vimtex',
+    'https://github.com/micangl/cmp-vimtex',
     {
-      src = gh 'saghen/blink.compat',
+      src = 'https://github.com/saghen/blink.compat',
       version = vim.version.range '2.*',
     },
   }

@@ -1,11 +1,10 @@
 -- Completion and snippets; called at the original Section 8 startup position.
 local M = {}
 
-local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
   -- [[ Snippet Engine ]]
-  vim.pack.add { { src = gh 'L3MON4D3/LuaSnip', version = vim.version.range '2.*' } }
+  vim.pack.add { { src = 'https://github.com/L3MON4D3/LuaSnip', version = vim.version.range '2.*' } }
   require('luasnip').setup {
     enable_autosnippets = true,
   }
@@ -14,7 +13,7 @@ function M.setup()
   --    See the README about individual language/framework/plugin snippets:
   --    https://github.com/rafamadriz/friendly-snippets
   --
-  vim.pack.add { gh 'rafamadriz/friendly-snippets' }
+  vim.pack.add { 'https://github.com/rafamadriz/friendly-snippets' }
   require('luasnip.loaders.from_vscode').lazy_load()
 
   -- VimTeX completion source for blink.cmp

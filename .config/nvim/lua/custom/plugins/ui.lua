@@ -1,16 +1,15 @@
 -- Interface, themes, highlights, icons, and status displays.
 local M = {}
 
-local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
   -- Floating prompts for vim.ui.input (for example, LSP rename).
-  vim.pack.add { gh 'folke/snacks.nvim' }
+  vim.pack.add { 'https://github.com/folke/snacks.nvim' }
   -- Global Snacks setup (including images) lives in custom.integrations.kitty.
   require('snacks').input.enable()
 
   -- Useful plugin to show you pending keybinds.
-  vim.pack.add { gh 'folke/which-key.nvim' }
+  vim.pack.add { 'https://github.com/folke/which-key.nvim' }
   require('which-key').setup {
     preset = 'modern',
     win = {
@@ -33,13 +32,13 @@ function M.setup()
   -- If you want to see what colorschemes are already installed, you can use `:FzfLua colorschemes`.
 
   -- Work machine: gruvbox, solid background.
-  vim.pack.add { gh 'morhetz/gruvbox' }
+  vim.pack.add { 'https://github.com/morhetz/gruvbox' }
   vim.g.gruvbox_contrast_dark = 'medium'
   vim.g.gruvbox_contrast_light = 'medium'
   vim.g.gruvbox_italic = 0
 
   -- Personal machine: Kanagawa (dragon = dark, lotus = light), see-through background.
-  vim.pack.add { gh 'rebelot/kanagawa.nvim' }
+  vim.pack.add { 'https://github.com/rebelot/kanagawa.nvim' }
   require('kanagawa').setup {
     transparent = true,
     -- Gutter (signs, line numbers) uses no background so it blends with the transparent editor.
@@ -79,10 +78,10 @@ function M.setup()
   require('custom.appearance').setup(vim.uv.os_gethostname() == 'beast' or vim.uv.os_gethostname() == 'redserver')
 
   -- Indentation guides use the plugin defaults.
-  vim.pack.add { gh 'lukas-reineke/indent-blankline.nvim' }
+  vim.pack.add { 'https://github.com/lukas-reineke/indent-blankline.nvim' }
   require('ibl').setup {}
 
-  vim.pack.add { gh 'm4xshen/smartcolumn.nvim' }
+  vim.pack.add { 'https://github.com/m4xshen/smartcolumn.nvim' }
   require('smartcolumn').setup {
     colorcolumn = '80', -- Fallback when EditorConfig does not specify a width.
     custom_colorcolumn = { ruby = '90' }, -- Ruby fallback; EditorConfig still takes precedence.
@@ -93,10 +92,10 @@ function M.setup()
 
   -- [[ mini.nvim ]]
   --  A collection of various small independent plugins/modules
-  vim.pack.add { gh 'nvim-mini/mini.nvim' }
+  vim.pack.add { 'https://github.com/nvim-mini/mini.nvim' }
 
   -- Use the real devicons provider before fzf-lua/statusline/Neo-tree load.
-  vim.pack.add { gh 'nvim-tree/nvim-web-devicons' }
+  vim.pack.add { 'https://github.com/nvim-tree/nvim-web-devicons' }
 
   -- Simple and easy statusline.
   local statusline = require 'mini.statusline'

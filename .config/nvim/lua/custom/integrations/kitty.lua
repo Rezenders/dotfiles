@@ -2,11 +2,9 @@
 local M = {}
 local snacks_doc_filtered = false
 
-local function gh(repo) return 'https://github.com/' .. repo end
-
 function M.setup()
   -- [[ Scrollback browsing ]]
-  vim.pack.add { gh 'mikesmithgh/kitty-scrollback.nvim' }
+  vim.pack.add { 'https://github.com/mikesmithgh/kitty-scrollback.nvim' }
   require('kitty-scrollback').setup({
     {
       visual_selection_highlight_mode = 'kitty',

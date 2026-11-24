@@ -1,14 +1,13 @@
 -- Git signs, diff review, links, and their keymaps.
 local M = {}
 
-local function gh(repo) return 'https://github.com/' .. repo end
 
 function M.setup()
   -- Here is a more advanced configuration example that passes options to `gitsigns.nvim`
   --
   -- See `:help gitsigns` to understand what each configuration key does.
   -- Adds git related signs to the gutter, as well as utilities for managing changes
-  vim.pack.add { gh 'lewis6991/gitsigns.nvim' }
+  vim.pack.add { 'https://github.com/lewis6991/gitsigns.nvim' }
   local gitsigns = require 'gitsigns'
   gitsigns.setup {
     signs = {
@@ -75,8 +74,8 @@ function M.setup()
 
   -- Repository-wide diff review with a changed-files sidebar.
   vim.pack.add {
-    gh 'nvim-lua/plenary.nvim',
-    gh 'sindrets/diffview.nvim',
+    'https://github.com/nvim-lua/plenary.nvim',
+    'https://github.com/sindrets/diffview.nvim',
   }
   require('diffview').setup {
     hooks = {
