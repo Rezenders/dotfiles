@@ -1,4 +1,30 @@
-[opener]
-edit = [
-  { run = 'python3 "${YAZI_CONFIG_HOME:-$HOME/.config/yazi}/scripts/edit-in-nvim" %s', block = true, for = "unix", desc = "Edit in Neovim" },
+[plugin]
+prepend_previewers = [
+  # Broad: any text-mimed file
+  { mime = "text/*",              run = "bat" },
+  { mime = "application/json",    run = "bat" },
+  { mime = "application/x-yaml",  run = "bat" },
+  { mime = "application/toml",    run = "bat" },
+
+  # Fallback globs for extensions that mime detection may miss
+  { url = "*.rs",       run = "bat" },
+  { url = "*.go",       run = "bat" },
+  { url = "*.py",       run = "bat" },
+  { url = "*.js",       run = "bat" },
+  { url = "*.ts",       run = "bat" },
+  { url = "*.tsx",      run = "bat" },
+  { url = "*.jsx",      run = "bat" },
+  { url = "*.lua",      run = "bat" },
+  { url = "*.sh",       run = "bat" },
+  { url = "*.c",        run = "bat" },
+  { url = "*.cpp",      run = "bat" },
+  { url = "*.h",        run = "bat" },
+  { url = "*.html",     run = "bat" },
+  { url = "*.htm",      run = "bat" },
+  { url = "*.md",       run = "bat" },
+  { url = "*.vhd",      run = "bat" },
+  { url = "*.vhdl",     run = "bat" },
+  { url = "*.v",        run = "bat" }
+  # ...add your own
 ]
+

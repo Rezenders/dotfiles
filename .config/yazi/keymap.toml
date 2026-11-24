@@ -12,3 +12,54 @@ desc = "Maximize preview pane"
 on = "<A-p>"
 run = "plugin toggle-pane min-parent"
 desc = "Toggle parent directory pane"
+
+[[mgr.prepend_keymap]]
+on   = "l"
+run  = "plugin smart-enter"
+desc = "Enter the child directory, or open the file"
+
+[[mgr.prepend_keymap]]
+on   = "<Enter>"
+run  = "plugin smart-enter"
+desc = "Enter the child directory, or open the file"
+
+[[mgr.prepend_keymap]]
+on   = "<Backspace>"
+run  = "leave"
+desc = "Go back to the parent directory"
+
+# Rofi
+[[mgr.prepend_keymap]]
+on   = "<C-g>"
+run  = 'shell -- rofi -steal-focus -theme fullscreen-preview -show filebrowser -filebrowser-command "ya emit reveal" -filebrowser-directory "$(pwd)"'
+desc = "Grid view"
+
+# chmod
+[[mgr.prepend_keymap]]
+on   = [ "c", "m" ]
+run  = "plugin chmod"
+desc = "Chmod on selected files"
+
+# browse git
+[[mgr.prepend_keymap]]
+on   = [ "g", "l" ]
+run  = "plugin open-git-remote"
+desc = "open git remote url"
+
+# kde connect send file
+[[mgr.prepend_keymap]]
+on   = [ "<C-s>" ]
+run  = "plugin kdeconnect-send"
+desc = "Send selected files via KDE Connect"
+
+# Dropping to shell
+[[mgr.prepend_keymap]]
+on   = "!"
+for  = "unix"
+run  = 'shell "$SHELL" --block'
+desc = "Open $SHELL here"
+
+[[input.prepend_keymap]]
+on   = "<Esc>"
+run  = "close"
+desc = "Cancel input"

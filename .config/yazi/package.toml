@@ -3,6 +3,51 @@ use = "yazi-rs/plugins:toggle-pane"
 rev = "2e0d8cf"
 hash = "5b2fbef7d1513ce38ff72623a071a5e"
 
+[[plugin.deps]]
+use = "yazi-rs/plugins:smart-enter"
+rev = "1ef5fe0"
+hash = "187cc58ba7ac3befd49c342129e6f1b6"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:jump-to-char"
+rev = "1ef5fe0"
+hash = "7a4b4237223aaa94e589d1c01a23542a"
+
+[[plugin.deps]]
+use = "CColombus/bat"
+rev = "f45ad7d"
+hash = "15328554de94d674330a6d164ed2085d"
+
+[[plugin.deps]]
+use = "skylightlim/gridview"
+rev = "4c7a2b1"
+hash = "3ccce349df27e8ce5ededc3395d2235b"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:chmod"
+rev = "1ef5fe0"
+hash = "87472b05a8c420100f6a2b9cde1e7746"
+
+[[plugin.deps]]
+use = "larry-oates/open-git-remote"
+rev = "72158d6"
+hash = "ed359abc14ba915a12e759435ed721ab"
+
+[[plugin.deps]]
+use = "Deepak22903/kdeconnect-send"
+rev = "06674d1"
+hash = "869884767c2ef592bfb7f5764f8fcae3"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:full-border"
+rev = "1ef5fe0"
+hash = "17ebde15c4349f90aedbc45984b98db2"
+
+[[plugin.deps]]
+use = "Rolv-Apneseth/starship"
+rev = "ea92cf4"
+hash = "9776f378459072b6c2875eae5addc49d"
+
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-latte"
 rev = "1183892"
@@ -17,3 +62,8 @@ hash = "8b2a726a1395106f7f1aac1619864bac"
 use = "yazi-rs/flavors:catppuccin-mocha"
 rev = "38c08d8"
 hash = "57d33c9c6107017bf8afc8df186356c5"
+
+[[flavor.deps]]
+use = "marcosvnmelo/kanagawa-dragon"
+rev = "b433f4a"
+hash = "b967c24a30350b1c5cd3a2ad5a7732e7"
