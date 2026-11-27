@@ -20,7 +20,7 @@
       "version": "2.0.0 - 3.0.0"
     },
     "claudecode.nvim": {
-      "rev": "6ad8e0fdbda84486f13f7f1fa4802942f4877f13",
+      "rev": "8bcc7bb816750405b624b4a4e05f9ef367715d1e",
       "src": "https://github.com/coder/claudecode.nvim"
     },
     "cmp-vimtex": {
@@ -44,7 +44,7 @@
       "src": "https://github.com/rafamadriz/friendly-snippets"
     },
     "fzf-lua": {
-      "rev": "a8312697c30b4d3b110fa3dc56e3699107aed9a0",
+      "rev": "a3b5e6bebcc604d0286fffa1c4eb05b066a2a198",
       "src": "https://github.com/ibhagwan/fzf-lua"
     },
     "gitlinker.nvim": {
@@ -52,7 +52,7 @@
       "src": "https://github.com/linrongbin16/gitlinker.nvim"
     },
     "gitsigns.nvim": {
-      "rev": "c0862d382a35b7b45757d8d151a6a634c09bf3ce",
+      "rev": "166c03131e6a3528f692dd89f37668d991f17baa",
       "src": "https://github.com/lewis6991/gitsigns.nvim"
     },
     "grug-far.nvim": {
@@ -68,7 +68,7 @@
       "src": "https://github.com/NMAC427/guess-indent.nvim"
     },
     "indent-blankline.nvim": {
-      "rev": "f1e186e44d3b7f9ae918008e2c28ce37c6023d2d",
+      "rev": "fbc6d88222b5f75613cb95a22e89aa2f4e318a81",
       "src": "https://github.com/lukas-reineke/indent-blankline.nvim"
     },
     "kanagawa.nvim": {
@@ -100,7 +100,7 @@
       "src": "https://github.com/mason-org/mason.nvim"
     },
     "mini.nvim": {
-      "rev": "b8a0af521530f8ee68c738657429eab59de6a2ae",
+      "rev": "24cf4ad5840f0d092e3d8296b17eaf7026bf27f3",
       "src": "https://github.com/nvim-mini/mini.nvim"
     },
     "neo-tree.nvim": {
@@ -121,7 +121,7 @@
       "src": "https://github.com/mfussenegger/nvim-lint"
     },
     "nvim-lspconfig": {
-      "rev": "4648fd8ba5c678d7e2db75ae44ffac269bb589d8",
+      "rev": "76f4cafc49677a34dc8ad8142b773d78ab4a041e",
       "src": "https://github.com/neovim/nvim-lspconfig"
     },
     "nvim-treesitter": {
@@ -158,7 +158,7 @@
       "src": "https://github.com/folke/todo-comments.nvim"
     },
     "vimtex": {
-      "rev": "90cd6619728df9f6161e5691ac247f0fe3437462",
+      "rev": "8787e6d030e9aee63dbe8b445862358a93b421bb",
       "src": "https://github.com/lervag/vimtex"
     },
     "which-key.nvim": {
@@ -166,7 +166,7 @@
       "src": "https://github.com/folke/which-key.nvim"
     },
     "yazi.nvim": {
-      "rev": "299f3e4ea2855613b18b9b3495b93b96a1abd9b7",
+      "rev": "a6f53ac18ee63a0de52df7f7bfbc12083865db08",
       "src": "https://github.com/mikavilpas/yazi.nvim",
       "version": "'main'"
     }
