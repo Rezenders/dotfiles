@@ -1,6 +1,6 @@
 [[plugin.deps]]
 use = "yazi-rs/plugins:toggle-pane"
-rev = "2e0d8cf"
+rev = "1ef5fe0"
 hash = "5b2fbef7d1513ce38ff72623a071a5e"
 
 [[plugin.deps]]
@@ -50,8 +50,8 @@ hash = "9776f378459072b6c2875eae5addc49d"
 
 [[flavor.deps]]
 use = "yazi-rs/flavors:catppuccin-latte"
-rev = "1183892"
-hash = "273ee53369ccfbf7feb9b0c65e387ed8"
+rev = "38c08d8"
+hash = "f4044a93fcd86ac34f170f9f69d40a2"
 
 [[flavor.deps]]
 use = "Sh00Fly/gruvbox-light"
